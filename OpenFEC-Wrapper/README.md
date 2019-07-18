@@ -1,8 +1,7 @@
 # OpenFEC_Wrapper
-A Python wrapper for the OpenFEC API. Documentation for this API can be found [here](https://api.open.fec.gov/developers)
+A Python wrapper for the OpenFEC API. Documentation for this API can be found [here](https://api.open.fec.gov/developers)  
 
 ## Installation
-
  1. Clone this repository:
 ```
 git clone https://github.com/Datawheel/DataUSA-Election/OpenFEC_Wrapper.git
@@ -27,10 +26,9 @@ set FEC_API_KEY=DEMO_KEY
 ```
 export FEC_API_KEY=DEMO_KEY
 ```
-
+___ 
 ## Examples
-
-### CANDIDATES
+#### CANDIDATES
 
 The `CANDIDATES` class holds information for Senate, House, and Presidential candidates. To create these three classes, pass 'S', 'H', or 'P' to create `CANDIDATE` objects for Senate, House, and President, respectively.
 
