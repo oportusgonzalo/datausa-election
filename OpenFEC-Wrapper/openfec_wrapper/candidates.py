@@ -17,7 +17,8 @@ class CANDIDATES(object):
         data = response.json()['results']
         results = json_normalize(data)
         print("COMPLETED INITIAL DATA GRAB")
-        return candidate_recur(self, 2, results, session.params, session.headers)
+        return candidate_recur(self, 2, results, session.params, 
+                               session.headers)
 
 
 # Recursive helper function for candidates method
