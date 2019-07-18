@@ -24,7 +24,7 @@ class TransformStep(PipelineStep):
             response = requests.get(
                 # To collect house/senate data, change the 'P' after 'office=' to a 'H' or 'S', respectively
                 # Must also change the value on line 38 in params to 'H' or 'S' from 'P'
-                'https://api.open.fec.gov/v1/candidates/?per_page=100&sort_nulls_last=false&sort=name&page=1&office=P&api_key=KdFRSrPvxP8hlc1pDGeDtyb7WZ87uXN2qhKvF822&sort_null_only=false&sort_hide_null=false', headers=headers)
+                'https://api.open.fec.gov/v1/candidates/?per_page=100&sort_nulls_last=false&sort=name&page=1&office=P&api_key=demo_key&sort_null_only=false&sort_hide_null=false', headers=headers)
             data = response.json()['results']
             results = json_normalize(data)
             return gen_fec_help(results, 2)
@@ -43,7 +43,7 @@ class TransformStep(PipelineStep):
                 ('sort', 'name'),
                 ('page', str(page)),
                 ('office', 'P'),
-                ('api_key', 'KdFRSrPvxP8hlc1pDGeDtyb7WZ87uXN2qhKvF822'),
+                ('api_key', 'demo_key'),
                 ('sort_null_only', 'false'),
                 ('sort_hide_null', 'false'),
             )
@@ -52,7 +52,7 @@ class TransformStep(PipelineStep):
             # NB. Original query string below. It seems impossible to parse and
             # reproduce query strings 100% accurately so the one below is given
             # in case the reproduced version is not "correct".
-            # response = requests.get('https://api.open.fec.gov/v1/candidates/?per_page=100&sort_nulls_last=false&sort=name&page=1&office=P&api_key=KdFRSrPvxP8hlc1pDGeDtyb7WZ87uXN2qhKvF822&sort_null_only=false&sort_hide_null=false', headers=headers)
+            # response = requests.get('https://api.open.fec.gov/v1/candidates/?per_page=100&sort_nulls_last=false&sort=name&page=1&office=P&api_key=demo_key&sort_null_only=false&sort_hide_null=false', headers=headers)
 
             data = response.json()['results']
             results = json_normalize(data)
@@ -118,7 +118,7 @@ class TransformStep(PipelineStep):
                         first_dict[candidate].append(fec_name)
                         break
         # if they are similar we merge all the possible outcomes and use fuzz ratio technique to find the best match out of it
-                    elif subsequence(candidate,fec_name),len(candidate),len(fec_name)) or subsequence(fec_name,candidate,len(fec_name),len(canidate)):
+                    elif subsequence(candidate,fec_name,len(candidate),len(fec_name)) or subsequence(fec_name,candidate,len(fec_name),len(canidate)):
                         first_dict[candidate].append(fec_name)
                     else:
                         flag += 1
