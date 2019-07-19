@@ -93,11 +93,12 @@ def result(out_list):
 
 
 # count the matched and unmatched output
-def check(c):
+#check_dict is the dictionary of Mit data and it's match on the fec data
+def check(check_dict):
     m = 0
     um = 0
     nm = 0
-    for i, j in c.items():
+    for i, j in check_dict.items():
         if i == j:
             m += 1
         elif j == "":
@@ -136,8 +137,8 @@ def normalize_name(name):
     return ' '.join(append_suff((fn + " " + ln).title()).split())
 
 
-# Merges all insignificant candidates for my pleasure... (Done by the percentage of votes recieved and name matching)
-# C is the list of candidates
+# Merges all insignificant candidates (Done by the percentage of votes recieved and name matching)
+# d is the dictionary of candidates
 # df is the main dataframe
 def merge_insig(d, df):
     keep = []
