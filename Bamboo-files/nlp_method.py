@@ -110,7 +110,7 @@ def check(c):
 # Method for normalizing the name
 # Moves suffix to end of name
 def append_suff(postfix_string):
-    for suf in ['Jr.', 'Sr.','Iii']:
+    for suf in ['Jr.', 'Sr.', 'Iii']:
         sl = re.split(suf, postfix_string)
         if len(sl) > 1:
             seperator = ''
@@ -120,7 +120,7 @@ def append_suff(postfix_string):
 
 # normalize the name
 def normalize_name(name):
-    name = re.sub(r"MR.|DR.|MRS.|MS.|PROF.|PH.D.", "", name)
+    name = re.sub(r"MR.|DR.|MRS.|MS.|PROF.|PH.D.|PROFESSOR", "", name)
     a = name.find('(')
     b = name.find(')')
     c = name.find('/')
@@ -134,6 +134,35 @@ def normalize_name(name):
     ln = name_list[0]
     fn = ' '.join(name_list[1].split())
     return ' '.join(append_suff((fn + " " + ln).title()).split())
+
+
+# Merges all insignificant candidates for my pleasure... (Done by the percentage of votes recieved and name matching)
+# C is the list of candidates
+# df is the main dataframe
+def merge_insig(d, df):
+    keep = []
+    other = []
+    for candidate in d.keys():
+        if(d[candidate] == ''):
+            kept = False
+            if candidate == 'other':
+                kept = True
+                other.append(candidate)
+            else:
+                location = df.loc[(df['candidate'].str.lower() == candidate)]
+                byyear = location.groupby('year')
+                cvote = byyear.sum()['candidatevotes']
+                tvote = byyear.sum()['totalvotes']
+                for year in cvote.index:
+                    percentage = cvote[year]/tvote[year]*100
+                    if percentage > 10:
+                        keep.append(candidate)
+                        kept = True
+                        break
+            if not kept:
+                other.append(candidate)
+                df.loc[(df['candidate'].str.lower() == candidate), 'candidate'] = 'Other'
+    return (keep, other)
 
 
 # Method for generating the dictionary
