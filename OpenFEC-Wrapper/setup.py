@@ -7,10 +7,10 @@ setuptools.setup(
     author="Walker Lambrecht",
     author_email="walker@datawheel.us",
     name="OpenFEC_Wrapper",
-    classifiers=(
+    classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
-    ),
+    ],
     description="Federal Election Comission API Wrapper",
     include_package_data=True,
     install_requires=[
