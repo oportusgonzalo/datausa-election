@@ -14,7 +14,9 @@ if FEC_API_KEY is None:
         "All api requests require an API key. See "
         "https://api.data.gov/signup/"
         "to retrieve an authentication token from "
-        "the Federal Election Commision"
+        "the Federal Election Commision, or email "
+        "apiinfo@fec.gov for information about an "
+        "upgraded api key."
     )
 
 session = requests.Session()
