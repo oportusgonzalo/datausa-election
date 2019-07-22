@@ -40,7 +40,7 @@ The `CandidateData` class holds information for Senate, House, and Presidential 
 #### presidential_candidates
 The `CandidateData.presidential_candidates()` method is a factory method that retrieves all Presidential candidates from the FEC. This method sets the `CandidateData`'s `self._dataframe` object to a pandas dataframe of these candidates
 
-```
+```python
 from openfec_wrapper import CandidateData
 p_candidates = CandidateData.presidential_candidates()
 ```
@@ -48,7 +48,7 @@ p_candidates = CandidateData.presidential_candidates()
 #### senate_candidates
 The `CandidateData.senate_candidates()` method is a factory method that retrieves all Senate candidates from the FEC. This method sets the `CandidateData`'s `self._dataframe` object to a pandas dataframe of these candidates
 
-```
+```python
 from openfec_wrapper import CandidateData
 s_candidates = CandidateData.senate_candidates()
 ```
@@ -56,7 +56,7 @@ s_candidates = CandidateData.senate_candidates()
 #### house_candidates
 The `CandidateData.house_candidates()` method is a factory method that retrieves all House candidates from the FEC. This method sets the `CandidateData`'s `self._dataframe` object to a pandas dataframe of these candidates
 
-```
+```python
 from openfec_wrapper import CandidateData
 h_candidates = CandidateData.house_candidates()
 ```
@@ -64,6 +64,6 @@ h_candidates = CandidateData.house_candidates()
 ##### dataframe
 The `CandidateData.dataframe()` method will return a `pandas` dataframe object of all candidates for the specific `CandidateData(object)` class.
 
-```
+```python
 president = p_candidates.dataframe()
 ```
