@@ -6,9 +6,11 @@ from fuzzywuzzy import process, fuzz
 
 
 # Modification method
-def modify(name):
+# bool value is true when we want reverse the string that is wehn the candidate name is not from presidential data
+def modify_fecname(name, bool):
     sl = name.replace('"', '').split(',')
-    # sl.reverse()
+    if bool:
+        sl.reverse()
     modified_name = ""
     for part_name in sl:
         modified_name = modified_name + part_name + " "
@@ -16,14 +18,16 @@ def modify(name):
 
 
 # subsequent string
-def subsequence(s1, s2, s1_length, s2_length):
+# finding a matching string even if there are some intermediate unmatching word
+# for example:- Hal furman will match with Harold W ii Furman regardless of additional character present in it
+def interruptable_substring_subsequence(s1, s2, s1_length, s2_length):
     b = 0
     a = 0
     while b < s1_length and a < s2_length:
         if s1[b] == s2[a]:
-            b += 1
-        a += 1
-    return b == s1_length
+            b += 1  # increments the b when there is a match of s1 and s2
+        a += 1  # iterates through the s2
+    return b == s1_length  # if s1 is present in s2 the length of traversed should be same as length of string
 
 
 # first pass on the data matching
@@ -39,7 +43,7 @@ def fpass(fec_list_names, mit_list_names):
                 first_dict[candidate].append(fec_name)
                 break
             # if they are similar we merge all the possible outcomes and use fuzz ratio technique to find the best match out of it
-            elif subsequence(candidate, fec_name, len(candidate), len(fec_name)) or subsequence(fec_name, candidate, len(fec_name), len(candidate)):
+            elif interruptable_substring_subsequence(candidate, fec_name, len(candidate), len(fec_name)) or interruptable_substring_subsequence(fec_name, candidate, len(fec_name), len(candidate)):
                 first_dict[candidate].append(fec_name)
             else:
                 flag += 1
@@ -109,6 +113,13 @@ def check(check_dict):
 
 
 # Method for normalizing the name
+# formating name MIT data
+def formatname_mitname(name):
+    name = name.replace('\\', '').strip('\"')
+    temp = re.sub('\".+\"', '', name)
+    return ' '.join(temp.split())
+
+
 # Moves suffix to end of name
 def append_suff(postfix_string):
     for suf in ['Jr.', 'Sr.', 'Iii']:
@@ -168,11 +179,16 @@ def merge_insig(d, df):
 
 # Method for generating the dictionary
 # gap variables gives the difference between the election years
-def nlp_dict(mit_candidate_df, fec_candidate_df, gap):
+# bool is true if it's presidential data else it is false
+def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
     final_l = []
     for year in range(1976, 2020, gap):
-        fec_candidate_list = [modify(candidate).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
-        mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
+        if bool:
+            fec_candidate_list = [modify_fecname(candidate, False).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
+            mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
+        else:
+            fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
+            mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
         fpass_result = fpass(fec_candidate_list, mit_canidate_list)
         # print("fpass done",year)
         final_l = final_l+out(fpass_result, fec_candidate_list)
