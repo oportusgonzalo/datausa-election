@@ -1,42 +1,58 @@
 # openfec_wrapper/fec.py
+import time
 import pandas as pd
+from bamboo_lib.logger import logger
 from pandas.io.json import json_normalize
 from .utils import session
 
 
-class CANDIDATES(object):
-    def __init__(self, office):
-        self.office = office
+class CandidateData(object):
+    def __init__(self, candidate_code):
+        self._dataframe = CandidateData.retrieve_candidates(candidate_code)
 
     # Returns information on all candidates that ran for a specific office
-    def dataframe(self):
+    @staticmethod
+    def retrieve_candidates(office):
         path = 'https://api.open.fec.gov/v1/candidates/?office={}'.format(
-            self.office)
+            office)
         response = session.get(
             path, headers=session.headers, params=session.params)
         data = response.json()['results']
         results = json_normalize(data)
-        print("COMPLETED INITIAL DATA GRAB")
-        return candidate_recur(self, 2, results, session.params, 
-                               session.headers)
+        return candidate_recur(2, results, session.params,
+                               session.headers, office)
+
+    def dataframe(self):
+        return self._dataframe
+
+    @staticmethod
+    def presidential_candidates():
+        return CandidateData('P')
+
+    @staticmethod
+    def senate_candidates():
+        return CandidateData('S')
+
+    @staticmethod
+    def house_candidates():
+        return CandidateData('H')
 
 
 # Recursive helper function for candidates method
-def candidate_recur(self, page, df, params, headers):
-    print("RECURRENCE NUMB: " + str(page))
+def candidate_recur(page, df, params, headers, office):
     path = 'https://api.open.fec.gov/v1/candidates/?office={}'.format(
-        self.office)
+        office)
     params['page'] = str(page)
     response = session.get(path, headers=headers, params=params)
     data = response.json()['results']
     results = json_normalize(data)
-
-    if page % 10 == 0 & page > 9:
-        print("Retrieved pages: " + str(page) + " through " + str(page - 10))
+    if page % 10 == 0 and page > 9:
+        logger.info("Finished downloading pages: " +
+                    str(page - 10) + " through " + str(page))
     if not results.empty:
-        print("NEXT PAGE")
         frames = [df, results]
         df = pd.concat(frames)
-        return candidate_recur(self, page + 1, df, params, headers)
+        time.sleep(1.0)
+        return candidate_recur(page + 1, df, params, headers, office)
     else:
         return df
