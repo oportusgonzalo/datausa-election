@@ -9,21 +9,21 @@ from fuzzywuzzy import process, fuzz
 def modify(name):
     sl = name.replace('"', '').split(',')
     # sl.reverse()
-    s = ""
+    modified_name = ""
     for part_name in sl:
-        s = s+part_name+" "
-    return s.strip()
+        modified_name = modified_name + part_name + " "
+    return modified_name.strip()
 
 
 # subsequent string
-def subsequence(s1, s2, m, n):
+def subsequence(s1, s2, s1_length, s2_length):
     b = 0
     a = 0
-    while b < m and a < n:
+    while b < s1_length and a < s2_length:
         if s1[b] == s2[a]:
             b += 1
         a += 1
-    return b == m
+    return b == s1_length
 
 
 # first pass on the data matching
@@ -53,31 +53,31 @@ def fpass(fec_list_names, mit_list_names):
 def out(fpass_dict, fec_list_names):
     # fpass_dict is the dictionary of the output from the fpass
     compare = []
-    for key, value in fpass_dict.items():
+    for mit_name, fec_possible_match in fpass_dict.items():
         # if the length of the dictonary is 1 and contains a null value we use fuzzy wuzzy logic to extract all the possible outcomes.
         # After the possible matches we run the jakkard similarity test to get the closest possible and also confirms it's partial ratio 83% to avoid false postitives
-        if len(value) == 1:
-            if value[0] == "":
-                possible_match = process.extract(key, fec_list_names)
+        if len(fec_possible_match) == 1:
+            if fec_possible_match[0] == "":
+                possible_match = process.extract(mit_name, fec_list_names)
                 min_dist = 1.1
-                s = ""
+                match_string = ""
                 for cvalues in possible_match:
-                    dist = nltk.jaccard_distance(set(nltk.ngrams(nltk.word_tokenize(key), n=1)), set(nltk.ngrams(nltk.word_tokenize(cvalues[0]), n=1)))
-                    if dist < min_dist and dist <= 0.75 and fuzz.partial_ratio(key, cvalues[0]) >= 83:
+                    dist = nltk.jaccard_distance(set(nltk.ngrams(nltk.word_tokenize(mit_name), n=1)), set(nltk.ngrams(nltk.word_tokenize(cvalues[0]), n=1)))
+                    if dist < min_dist and dist <= 0.75 and fuzz.partial_ratio(mit_name, cvalues[0]) >= 83:
                         min_dist = dist
-                        s = cvalues[0]
-                compare.append([key, s])
+                        match_string = cvalues[0]
+                compare.append([mit_name, match_string])
             else:
-                compare.append([key, value[0]])
+                compare.append([mit_name, fec_possible_match[0]])
         else:
-            s = ""
-            m = -1
+            match_string = ""
+            match_ratio = -1
             # if there is already a potential match we just loook for the best from the posible match found using the previous logic
-            for i in value:
-                if fuzz.ratio(key, i) > m and fuzz.ratio(key, i) >= 86:
-                    m = fuzz.ratio(key, i)
-                    s = i
-            compare.append([key, s])
+            for possible_outcome in fec_possible_match:
+                if fuzz.ratio(mit_name, possible_outcome) > match_ratio and fuzz.ratio(mit_name, possible_outcome) >= 86:
+                    match_ratio = fuzz.ratio(mit_name, possible_outcome)
+                    match_string = possible_outcome
+            compare.append([mit_name, match_string])
     return compare
 
 
@@ -93,19 +93,19 @@ def result(out_list):
 
 
 # count the matched and unmatched output
-#check_dict is the dictionary of Mit data and it's match on the fec data
+# check_dict is the dictionary of Mit data and it's match on the fec data
 def check(check_dict):
-    m = 0
-    um = 0
-    nm = 0
-    for i, j in check_dict.items():
-        if i == j:
-            m += 1
-        elif j == "":
-            um += 1
+    matched = 0
+    unmatched = 0
+    partialmatched = 0
+    for mit_name, fec_name in check_dict.items():
+        if mit_name == fec_name:
+            matched += 1
+        elif fec_name == "":
+            unmatched += 1
         else:
-            nm += 1
-    return pd.DataFrame([m, um, nm], index=["Matched_fully", "Blank_string", "Matched_partially"])
+            partialmatched += 1
+    return pd.DataFrame([matched, unmatched, partialmatched], index=["Matched_fully", "Blank_string", "Matched_partially"])
 
 
 # Method for normalizing the name
@@ -121,10 +121,10 @@ def append_suff(postfix_string):
 
 # normalize the name
 def normalize_name(name):
-    name = re.sub(r"MR.|DR.|MRS.|MS.|PROF.|PH.D.|PROFESSOR", "", name)
-    a = name.find('(')
-    b = name.find(')')
-    c = name.find('/')
+    name = re.sub(r"MR.|DR.|MRS.|MS.|PROF.|PH.D.|PROFESSOR|SENATOR", "", name)
+    a = name.find('(')  # finding the location of '(' and ')' in a string for exaple Gearald ford (NOT A President candidate)
+    b = name.find(')')  # using these we remove the "(.........)" any kind of this string
+    c = name.find('/')  # removing the Vice President's name if give in the FEC data such as candidate / vice president of candidate
     if a != -1 and b != -1:
         name = name[:a]+name[b+1:]
     if c != -1:
@@ -156,7 +156,7 @@ def merge_insig(d, df):
                 tvote = byyear.sum()['totalvotes']
                 for year in cvote.index:
                     percentage = cvote[year]/tvote[year]*100
-                    if percentage > 10:
+                    if percentage > 5:
                         keep.append(candidate)
                         kept = True
                         break
@@ -167,11 +167,12 @@ def merge_insig(d, df):
 
 
 # Method for generating the dictionary
-def nlp_dict(mit_candidate_df, fec_candidate_df):
+# gap variables gives the difference between the election years
+def nlp_dict(mit_candidate_df, fec_candidate_df, gap):
     final_l = []
-    for year in range(1976, 2020, 4):
-        fec_candidate_list = [modify(i).lower() for i in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
-        mit_canidate_list = [i.replace('\\', '').replace('"', '').replace(',', '').lower() for i in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
+    for year in range(1976, 2020, gap):
+        fec_candidate_list = [modify(candidate).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
+        mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
         fpass_result = fpass(fec_candidate_list, mit_canidate_list)
         # print("fpass done",year)
         final_l = final_l+out(fpass_result, fec_candidate_list)
