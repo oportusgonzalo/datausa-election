@@ -1,7 +1,7 @@
 # A simple example of how to use the openFEC wrapper
 from openfec_wrapper import CandidateData
 
-# Create CANDIDATE objects for senate, house, and president
+# Create CandidateData objects for senate, house, and president
 p_candidates = CandidateData.presidential_candidates()
 s_candidates = CandidateData.senate_candidates()
 
