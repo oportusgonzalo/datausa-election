@@ -10,7 +10,7 @@ git clone https://github.com/Datawheel/DataUSA-Election/OpenFEC_Wrapper.git
 
  2. navigate into the new directory:
 ```
-cd fecwrapper
+cd OpenFEC-Wrapper
 ```
 
  3. run command in cmd or terminal:
