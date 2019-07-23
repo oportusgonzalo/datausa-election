@@ -146,5 +146,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECDataStep()
         xform_step = TransformStep()
-        load_step = LoadStep("president_election_state_1976-2018", connector=params["output-db"], connector_path=__file__,  if_exists="append")
+        load_step = LoadStep("president_election", connector=params["output-db"], connector_path=__file__,  if_exists="append")
         return [dl_step, fec_step, xform_step, load_step]
