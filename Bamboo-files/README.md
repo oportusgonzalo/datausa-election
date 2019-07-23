@@ -1,5 +1,28 @@
-Follow the following steps to perform perfect execution of the script:
- 1) Both files should be in the same folders.
- 2) Install the OpenFec Wrapper by following the steps in the following file. 
-  https://github.com/Datawheel/DataUSA-Election/blob/master/OpenFEC-Wrapper/README.md
- 3) And than run the election_office.py using the bamboo.
+# DataUSA-Election Bamboo ETL
+The ETL scripts for DataUSA Elections
+
+## Steps to Execute
+Clone this repository:
+```
+git clone https://github.com/Datawheel/DataUSA-Election
+```
+
+### Installing OpenFEC-Wrapper
+Install the OpenFec-Wrapper by following steps in the repository's README: 
+https://github.com/Datawheel/DataUSA-Election/blob/master/OpenFEC-Wrapper
+ 
+### Installing nltk:
+ 
+ ```
+ import nltk
+ ```
+ 
+ ```
+ nltk.download('punkt')
+ ```
+
+### Executing scripts:
+From cmd or terminal, run the bamboo ETL using bamboo-cli from the Bamboo-files folder. Replace ENTRY_FILE with any of the python files in this folder and OUTPUT-DB-CONNECTOR with the desired output database connector name:
+```
+bamboo-cli --folder . --entry ENTRY_FILE --output-db=OUTPUT-DB-CONNECTOR
+```
