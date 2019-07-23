@@ -6,3 +6,4 @@ eggs/
 .eggs/
 build/
 dist/
+.sqlite
