@@ -45,7 +45,7 @@ class TransformStep(PipelineStep):
         df = prev_result[0]
         # transformation script removing null values and formating the data
         president = pd.read_csv(df, delimiter="\t")
-        president.drop(["notes", "state_cen", "state_ic"], axis=1, inplace=True)
+        president.drop(["notes", "state_cen", "state_ic", "state_po"], axis=1, inplace=True)
         president['state_fips'] = self.fips_code(president['state_fips'])
         president["office"] = "President"
         president.loc[president["writein"] == "False", "writein"] = False
@@ -57,11 +57,12 @@ class TransformStep(PipelineStep):
         president.loc[(president['party'] == "other"), 'party'] = "Other"
         president.loc[(president['party'] == "unenrolled") & (president['candidate'].isnull()), 'candidate'] = "Other"
         president.loc[(president['candidate'].isnull()), 'candidate'] = "Unavailable"
-        president.loc[(president['year'] == 2012) & (president['candidate'] == "Mitt, Romney")] = "Romney, Mitt"
+        president.loc[(president['year'] == 2012) & (president['candidate'] == "Mitt, Romney"), 'candidate'] = "Romney, Mitt"
         president.loc[((president['party'].isnull()) & (president['candidate'] == "Other")), 'party'] = "Other"
         president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'party'] = "Unavailable"
         president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'candidate'] = "Blank Vote"
         president['party'] = president['party'].str.title()
+        president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
 
         # importing the FEC data
         # URL for the fec data
@@ -125,7 +126,7 @@ class TransformStep(PipelineStep):
         president.loc[(president['candidate_id'] == "P99999999"), 'candidate'] = "Other"
         # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
         # fec_mit_result.to_csv("MIT_fec_president_NLTK_fuzzywuzzy.csv", index=False)
-        # president.to_csv("President_election_1976-2016.csv", index=False)
+        president.to_csv("President_election_1976-2016.csv", index=False)
         return president
 
 
@@ -145,5 +146,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECDataStep()
         xform_step = TransformStep()
-        load_step = LoadStep("bls_test_import", connector=params["output-db"], connector_path=__file__,  if_exists="append")
+        load_step = LoadStep("president_election_state_1976-2018", connector=params["output-db"], connector_path=__file__,  if_exists="append")
         return [dl_step, fec_step, xform_step, load_step]
