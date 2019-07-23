@@ -10,7 +10,6 @@ from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
 from openfec_wrapper import CandidateData
-nltk.download('punkt')
 
 
 class ExtractFECDataStep(PipelineStep):
