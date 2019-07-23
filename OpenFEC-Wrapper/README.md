@@ -19,13 +19,13 @@ python setup.py install
 ```
 
 ### Setting environment variables on macOS
- 4. Navigate to project root directory and set FEC_API_KEY environment variable with your actual API key:
+Navigate to project root directory and set FEC_API_KEY environment variable with your actual API key:
 ```
 export FEC_API_KEY=DEMO_KEY
 ```
 
 ### Setting environment variables on PC
- 4. Navigate to project root directory and set FEC_API_KEY environment variable with your actual API key:
+Navigate to project root directory and set FEC_API_KEY environment variable with your actual API key:
 ```
 set FEC_API_KEY=DEMO_KEY
 ```
