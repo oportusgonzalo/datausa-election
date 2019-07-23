@@ -15,11 +15,14 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         "pandas==0.24.2",
-        "requests==2.22.0"
+        "requests==2.22.0",
+        "pandas==0.24.2",
+        "requests-cache==0.5.0",
+        "bamboo-lib==0.0.24"
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    version="0.0.1",
+    version="0.0.2",
     url="https://github.com/Datawheel/DataUSA-Election/OpenFEC_Wrapper",
 )
