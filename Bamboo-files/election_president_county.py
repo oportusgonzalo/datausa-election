@@ -10,14 +10,7 @@ from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
 from openfec_wrapper import CandidateData
-
-
-class ExtractFECDataStep(PipelineStep):
-    def run_step(self, prev_result, params):
-        # Create CandidateData objects president
-        p_candidates = CandidateData.presidential_candidates()
-        president_fec = p_candidates.dataframe()
-        return (prev_result, president_fec)
+from shared_steps import ExtractFEC_PresidentDataStep
 
 
 class TransformStep(PipelineStep):
@@ -62,7 +55,6 @@ class TransformStep(PipelineStep):
         for index, row in nd.iterrows():
             row_list = row.values
             temp = row_list[2]
-            # temp = temp.strip('{').strip('}').split(',')
             for year in temp:
                 candidate_list.append(
                     [row_list[0], row_list[1], int(year), row_list[3]])
@@ -186,7 +178,7 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(
             connector="uspc-data", connector_path=__file__,
             force=params.get("force", False))
-        fec_step = ExtractFECDataStep()
+        fec_step = ExtractFEC_PresidentDataStep()
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election_county", connector=params["output-db"],
