@@ -126,7 +126,7 @@ class TransformStep(PipelineStep):
         president.loc[(president['candidate_id'] == "P99999999"), 'candidate'] = "Other"
         # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
         # fec_mit_result.to_csv("MIT_fec_president_NLTK_fuzzywuzzy.csv", index=False)
-        president.to_csv("President_election_1976-2016.csv", index=False)
+        # president.to_csv("President_election_1976-2016.csv", index=False)
         return president
 
 
