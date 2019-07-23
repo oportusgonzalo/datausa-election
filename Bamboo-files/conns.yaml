@@ -45,3 +45,7 @@ bea-api:
 usp-data:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
   uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O
+  
+ uspc-data:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/VOQCHQ/FQ9NBF
