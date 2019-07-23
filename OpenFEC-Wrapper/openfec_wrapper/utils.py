@@ -1,6 +1,7 @@
 # openfec_wrapper/utils.py
 import os
 import requests
+import requests_cache
 
 FEC_API_KEY = os.environ.get('FEC_API_KEY', None)
 
@@ -19,6 +20,9 @@ if FEC_API_KEY is None:
         "upgraded api key."
     )
 
+# Caches api requests for one hour in data_cache.sqlite file. Do not share
+# this file as it contains your private api key.
+requests_cache.install_cache('data_cache', expire_after=3600)
 session = requests.Session()
 session.params = {
     'per_page': '100',
