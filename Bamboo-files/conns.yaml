@@ -1,0 +1,51 @@
+postgres-local:
+  driver: bamboo_lib.connectors.drivers.postgres.PostgresDriver
+  uri: postgres://$BAMBOO_DB_USER:$BAMBOO_DB_PW@$BAMBOO_DB_HOST/$BAMBOO_DB_NAME
+
+clickhouse-remote:
+  driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver
+  uri: clickhouse://127.0.0.1/testing
+
+http-local:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: http://data.bls.gov/cew/data/api/2015/1/area/US000.csv
+
+pums-local:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: https://www2.census.gov/programs-surveys/acs/data/pums/<year>/<estimate>-Year/csv_pus.zip
+
+pums-pr:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: https://www2.census.gov/programs-surveys/acs/data/pums/<year>/<estimate>-Year/csv_ppr.zip
+
+schema-remote:
+  driver: bamboo_lib.connectors.drivers.filetransfer.FileTransferDriver
+  server: canon-api.datausa.io
+  user: deploy
+  key_filename: $HOME/.ssh/id_rsa_dw_deploy
+
+postgres-remote:
+  driver: bamboo_lib.connectors.drivers.postgres.PostgresDriver
+  uri: postgres://$DATAUSA_DB_USER:$DATAUSA_DB_PW@$DATAUSA_DB_HOST/$DATAUSA_DB_NAME
+
+datausa-cube-remote:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: $DATAUSA_CUBE_API/flush?secret=$DATAUSA_SECRET
+
+monetdb-remote:
+  driver: bamboo_lib.connectors.drivers.monet.MonetDriver
+  uri: monetdb://monetdb:monetdb@canon-api.datausa.io:50000/datausa
+  hostname: canon-api.datausa.io
+  database: datausa
+
+bea-api:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: http://www.bea.gov/api/data/?UserID=25347C32-47A3-4764-8AD3-EF969B9003AF&method=GetData&DataSetName=InputOutput&Year=<year>&tableID=<industry_level>&ResultFormat=json
+
+usp-data:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O
+  
+uspc-data:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/VOQCHQ/FQ9NBF
