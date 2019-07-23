@@ -106,21 +106,24 @@ class TransformStep(PipelineStep):
                 continue
             normalizedname_dict[cid] = nm.normalize_name(name)
         # replacing the Normalized name from FEC data in MIT data
+        candidate_l = []
         for index, row in president.iterrows():
             cid = row['candidate_id']
             name = row['candidate']
             if cid == "P99999999" and name in ['Blank Vote', 'Other', 'Unavailable']:
+                candidate_l.append(name)
                 continue
             elif cid == "P99999999":
                 sl = name.strip('\"').split(',')
                 if len(sl) == 1:
-                    row['candidate'] = sl[0]
+                    candidate_l.append(sl[0])
                 else:
                     temp1 = sl[0].strip().strip('\"').split(' ')
                     temp2 = sl[1].strip().strip('\"').split(' ')
-                    row['candidate'] = temp2[0]+' '+temp1[0]
+                    candidate_l.append(temp2[0]+' '+temp1[0])
             else:
-                row['candidate'] = normalizedname_dict[cid]
+                candidate_l.append(normalizedname_dict[cid])
+        president['candidate'] = candidate_l
 
         # final transformation steps
         president.loc[(president['candidate_id'] == "P99999999"), 'candidate'] = "Other"
@@ -146,5 +149,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECDataStep()
         xform_step = TransformStep()
-        load_step = LoadStep("president_election", connector=params["output-db"], connector_path=__file__,  if_exists="append")
+        load_step = LoadStep("president_election_state_1976-2018", connector=params["output-db"], connector_path=__file__,  if_exists="append")
         return [dl_step, fec_step, xform_step, load_step]
