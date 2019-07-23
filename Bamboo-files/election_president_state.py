@@ -1,10 +1,13 @@
 import pandas as pd
 import collections
+import os
+import sys
 import nlp_method as nm
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
 from openfec_wrapper import CandidateData
+
 
 class ExtractFECDataStep(PipelineStep):
     def run_step(self, prev_result, params):
@@ -58,6 +61,7 @@ class TransformStep(PipelineStep):
         president.loc[((president['party'].isnull()) & (president['candidate'] == "Other")), 'party'] = "Other"
         president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'party'] = "Unavailable"
         president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'candidate'] = "Blank Vote"
+        president['party'] = president['party'].str.title()
 
         # importing the FEC data
         # URL for the fec data
@@ -119,7 +123,6 @@ class TransformStep(PipelineStep):
 
         # final transformation steps
         president.loc[(president['candidate_id'] == "P99999999"), 'candidate'] = "Other"
-        president['party'] = [candidate.title() for candidate in president['party'].values]
         # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
         # fec_mit_result.to_csv("MIT_fec_president_NLTK_fuzzywuzzy.csv", index=False)
         # president.to_csv("President_election_1976-2016.csv", index=False)
@@ -132,11 +135,13 @@ class ExamplePipeline(EasyPipeline):
         return [
             Parameter("year", dtype=int),
             Parameter("force", dtype=bool),
-            Parameter(label="Output database connector", name="output-db", dtype=str, source=Connector)
+            Parameter(label="Output database connector", name="output-db", dtype=str, source=Connector),
+            Parameter("folder", dtype=str)
         ]
 
     @staticmethod
     def steps(params):
+        sys.path.append(os.getcwd())
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECDataStep()
         xform_step = TransformStep()
