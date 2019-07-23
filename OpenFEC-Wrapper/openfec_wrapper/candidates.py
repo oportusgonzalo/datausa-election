@@ -7,6 +7,7 @@ from .utils import session
 
 
 class CandidateData(object):
+
     def __init__(self, candidate_code):
         self._dataframe = CandidateData.retrieve_candidates(candidate_code)
 
@@ -52,7 +53,8 @@ def candidate_recur(page, df, params, headers, office):
     if not results.empty:
         frames = [df, results]
         df = pd.concat(frames)
-        time.sleep(1.0)
+        if not response.from_cache:
+            time.sleep(1.0)
         return candidate_recur(page + 1, df, params, headers, office)
     else:
         return df
