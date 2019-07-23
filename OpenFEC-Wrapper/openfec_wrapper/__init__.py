@@ -1,2 +1,2 @@
 # openfec_wrapper/__init__.py
-from .candidates import CANDIDATES
+from .candidates import CandidateData
