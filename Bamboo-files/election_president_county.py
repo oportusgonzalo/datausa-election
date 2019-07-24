@@ -3,14 +3,12 @@ import collections
 import nlp_method as nm
 import math
 import numpy as np
-import nltk
 import sys
 import os
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
-from openfec_wrapper import CandidateData
-from shared_steps import ExtractFEC_PresidentDataStep
+from shared_steps import ExtractFECStep
 
 
 class TransformStep(PipelineStep):
@@ -178,7 +176,7 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(
             connector="uspc-data", connector_path=__file__,
             force=params.get("force", False))
-        fec_step = ExtractFEC_PresidentDataStep()
+        fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election_county", connector=params["output-db"],
