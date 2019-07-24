@@ -2,25 +2,17 @@ from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from openfec_wrapper import CandidateData
 
 
-class ExtractFEC_PresidentDataStep(PipelineStep):
+class ExtractFECStep(PipelineStep):
+    PRESIDENT = 'P'
+    SENATE = 'S'
+    HOUSE = 'H'
+
+    def __init__(self, candidate_type, **kwargs):
+        super().__init__(**kwargs)
+        self.candidate_type = candidate_type
+       # TODO can check values here and raise ValueError if candidate_type is invalid...
+
     def run_step(self, prev_result, params):
-        # Create CandidateData objects president
-        p_candidates = CandidateData.presidential_candidates()
-        president_fec = p_candidates.dataframe()
-        return (prev_result, president_fec)
-
-
-class ExtractFEC_SenateDataStep(PipelineStep):
-    def run_step(self, prev_result, params):
-        # Create CandidateData objects president
-        s_candidates = CandidateData.senate_candidates()
-        senate_fec = s_candidates.dataframe()
-        return (prev_result, senate_fec)
-
-
-class ExtractFEC_HouseDataStep(PipelineStep):
-    def run_step(self, prev_result, params):
-        # Create CandidateData objects president
-        h_candidates = CandidateData.house_candidates()
-        house_fec = h_candidates.dataframe()
-        return (prev_result, house_fec)
+        p_candidates = CandidateData(self.candidate_type)
+        fec_df = p_candidates.dataframe()
+        return (prev_result, fec_df)
