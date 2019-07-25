@@ -24,9 +24,9 @@ class TransformStep(PipelineStep):
                 # at identical FIPS and year to null totalvotes
                 newTotal = df[(df['FIPS'] == fips.at[row]) & (
                     df['year'] == year.at[row])].sum()['candidatevotes']
-                str(vote_list.append(newTotal))
+                vote_list.append(newTotal)
             else:
-                str(vote_list.append(totalvotes.at[row]))
+                vote_list.append(totalvotes.at[row])
         return vote_list
 
     # method for expnading the year
@@ -159,6 +159,8 @@ class TransformStep(PipelineStep):
         # Rename FIPS and county column
         president.rename(columns={'FIPS': 'geo_id'}, inplace=True)
         president.rename(columns={'county': 'geo_name'}, inplace=True)
+        president['candidatevotes'] = president['candidatevotes'].astype(int)
+        president['totalvotes'] = president['totalvotes'].astype(int)
 
         return president
 
