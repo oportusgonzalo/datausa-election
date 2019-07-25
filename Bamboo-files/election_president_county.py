@@ -46,6 +46,24 @@ class TransformStep(PipelineStep):
         # transformation script removing null values and formating the data
         president = pd.read_csv(df, delimiter="\t")
 
+        # Fills in null state_po's
+        null_state_po = {}
+        for index, row in president.loc[
+                president['state_po'].isnull()].iterrows():
+            if not row['state'] in null_state_po:
+                null_state_po.update({row['state']: president.loc[
+                    (president['state_po'].notnull()) & (
+                        president['state'] == row['state']),
+                    'state_po'].iloc[0]})
+                president.loc[(president['state'] == row['state']),
+                              'state_po'] = null_state_po[row['state']]
+
+        # Reformat counties
+        county_list = []
+        for index, row in president.iterrows():
+            county_list.append(row['county'] + " County, " + row['state_po'])
+        president['county'] = county_list
+
         # Custom Fips codes assigned to be non repeating
         null_fips = {}
         for index, row in president.loc[president['FIPS'].isnull()].iterrows():
