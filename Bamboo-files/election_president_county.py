@@ -1,7 +1,6 @@
 import pandas as pd
 import collections
 import nlp_method as nm
-import math
 import numpy as np
 import sys
 import os
@@ -12,22 +11,6 @@ from shared_steps import ExtractFECStep
 
 
 class TransformStep(PipelineStep):
-
-    # This method removes the decimal from the FIPS code and appends the prefix
-    # of county 05000US with padding of XXAAA.
-    @staticmethod
-    def fips_code(codes_list):
-        fips_list = []
-        for code in codes_list:
-            if math.isnan(code):
-                fips_list.append(str(code))
-            elif code < 10000.0:
-                code = str(int(code))
-                fips_list.append("05000US0" + code)
-            else:
-                code = str(int(code))
-                fips_list.append("05000US" + code)
-        return fips_list
 
     # Calculates the total votes for a null totalvotes value using the
     # candidatevotes sum for equal FIPS code and year
@@ -63,8 +46,28 @@ class TransformStep(PipelineStep):
         # transformation script removing null values and formating the data
         president = pd.read_csv(df, delimiter="\t")
 
-        # Fix the FIPS codes using method defined above
-        president['FIPS'] = self.fips_code(president['FIPS'])
+        # Custom Fips codes assigned to be non repeating
+        null_fips = {}
+        for index, row in president.loc[president['FIPS'].isnull()].iterrows():
+            if not row['county'] in null_fips:
+                null_fips.update({row['county']: president.loc[
+                    (president['FIPS'].notnull()) & (
+                        president['state'] == row['state']), 'FIPS'].max()
+                    + 1})
+                president.loc[president['county'] ==
+                              row['county'], 'FIPS'] = null_fips[row['county']]
+
+        # Append FIP's code prefixes. Throw exception if null values exist
+        try:
+            president['FIPS'] = "05000US" + \
+                president['FIPS'].astype(int).astype(str).str.zfill(5)
+        # Above logic incorrect, throw exception!
+        except Exception:
+            null_county = president.loc[
+                president['FIPS'].isnull()].iloc[0]['county']
+            raise Exception(
+                'There exists null FIPS codes in the database. ' +
+                'The county is: ' + str(null_county))
 
         # Fix null party values
         president.loc[(president['party'].isnull()), 'party'] = 'Other'
@@ -151,7 +154,7 @@ class TransformStep(PipelineStep):
         # final transformation steps
         president.loc[(president['candidate_id'] == "P99999999"),
                       'candidate'] = "Other"
-        president.drop(['index', 'state_po', axis=1, inplace=True)
+        president.drop(['index', 'state_po', 'state'], axis=1, inplace=True)
 
         # Rename FIPS and county column
         president.rename(columns={'FIPS': 'geo_id'}, inplace=True)
