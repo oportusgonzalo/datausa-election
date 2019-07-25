@@ -151,7 +151,7 @@ class TransformStep(PipelineStep):
         # final transformation steps
         president.loc[(president['candidate_id'] == "P99999999"),
                       'candidate'] = "Other"
-        president.drop('state_po', axis=1, inplace=True)
+        president.drop(['index', 'state_po', axis=1, inplace=True)
 
         # Rename FIPS and county column
         president.rename(columns={'FIPS': 'geo_id'}, inplace=True)
