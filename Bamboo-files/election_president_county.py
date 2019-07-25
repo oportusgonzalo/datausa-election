@@ -184,6 +184,6 @@ class ExamplePipeline(EasyPipeline):
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
         load_step = LoadStep(
-            "president_election_county", connector=params["output-db"],
+            "president_election", connector=params["output-db"],
             connector_path=__file__,  if_exists="append")
         return [dl_step, fec_step, xform_step, load_step]
