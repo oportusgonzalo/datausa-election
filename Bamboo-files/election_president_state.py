@@ -3,11 +3,10 @@ import collections
 import os
 import sys
 import nlp_method as nm
+from shared_steps import ExtractFECStep
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
-from openfec_wrapper import CandidateData
-from shared_steps import ExtractFECStep
 
 
 class TransformStep(PipelineStep):
@@ -24,22 +23,11 @@ class TransformStep(PipelineStep):
                 candidate_list.append([row_list[0], row_list[1], int(year), row_list[3]])
         return candidate_list
 
-    @staticmethod
-    def fips_code(codes_list):
-        fips_list = []
-        for code in codes_list:
-            if code < 10:
-                fips_list.append("04000US0"+str(code))
-            else:
-                fips_list.append("04000US"+str(code))
-        return fips_list
-
     def run_step(self, prev_result, params):
         df = prev_result[0]
         # transformation script removing null values and formating the data
         president = pd.read_csv(df, delimiter="\t")
-        president.drop(["notes", "state_cen", "state_ic", "state_po"], axis=1, inplace=True)
-        president['state_fips'] = self.fips_code(president['state_fips'])
+        president['state_fips'] = "04000US" + president.state_fips.astype(str).str.zfill(2)
         president["office"] = "President"
         president.loc[president["writein"] == "False", "writein"] = False
         president.loc[president["writein"] == "True", "writein"] = True
@@ -55,6 +43,7 @@ class TransformStep(PipelineStep):
         president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'party'] = "Unavailable"
         president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'candidate'] = "Blank Vote"
         president['party'] = president['party'].str.title()
+        president.drop(["notes", "state_cen", "state_ic", "state_po", "writein"], axis=1, inplace=True)
         president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
 
         # importing the FEC data
