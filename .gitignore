@@ -7,3 +7,4 @@ eggs/
 build/
 dist/
 .sqlite
+data_cache.sql
