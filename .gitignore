@@ -6,5 +6,5 @@ eggs/
 .eggs/
 build/
 dist/
-.sqlite
+*.sqlite
 data_cache.sql
