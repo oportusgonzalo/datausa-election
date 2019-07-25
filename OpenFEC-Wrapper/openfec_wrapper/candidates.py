@@ -54,7 +54,7 @@ def candidate_recur(page, df, params, headers, office):
         frames = [df, results]
         df = pd.concat(frames)
         if not response.from_cache:
-            time.sleep(1.0)
+            time.sleep(0.5)
         return candidate_recur(page + 1, df, params, headers, office)
     else:
         return df
