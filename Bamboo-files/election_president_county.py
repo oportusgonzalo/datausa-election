@@ -61,7 +61,11 @@ class TransformStep(PipelineStep):
         # Reformat counties
         county_list = []
         for index, row in president.iterrows():
-            county_list.append(row['county'] + " County, " + row['state_po'])
+            if np.isnan(row['FIPS']):
+                county_list.append(row['county'] + ", " + row['state_po'])
+            else:
+                county_list.append(
+                    row['county'] + " County, " + row['state_po'])
         president['county'] = county_list
 
         # Custom Fips codes assigned to be non repeating
