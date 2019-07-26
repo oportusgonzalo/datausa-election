@@ -181,9 +181,9 @@ class TransformStep(PipelineStep):
         # Rename FIPS and county column
         president.rename(columns={'FIPS': 'geo_id'}, inplace=True)
         president.rename(columns={'county': 'geo_name'}, inplace=True)
-        president['candidatevotes'] = president['candidatevotes'].astype(int)
-        president['totalvotes'] = president['totalvotes'].astype(int)
-
+        president['candidatevotes'] = president['candidatevotes'].astype(
+            np.int64)
+        president['totalvotes'] = president['totalvotes'].astype(np.int64)
         return president
 
 
@@ -207,5 +207,5 @@ class ExamplePipeline(EasyPipeline):
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election", connector=params["output-db"],
-            connector_path=__file__,  if_exists="append")
+            connector_path=__file__,  if_exists="append", pk=['candidate_id'])
         return [dl_step, fec_step, xform_step, load_step]
