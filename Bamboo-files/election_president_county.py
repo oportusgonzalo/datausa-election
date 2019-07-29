@@ -161,17 +161,20 @@ class TransformStep(PipelineStep):
             normalizedname_dict[cid] = nm.normalize_name(name)
 
         # replacing the Normalized name from FEC data in MIT data
+        candidate_l=[]
         for index, row in president.iterrows():
             cid = row['candidate_id']
             name = row['candidate']
             if cid == "P99999999" and name in ['Blank Vote', 'Other',
                                                'Unavailable']:
+                candidate_l.append(name)
                 continue
             elif cid == "P99999999":
-                row['candidate'] = nm.formatname_mitname(
-                    candidate).replace('.', '').lower()
+                candiadte_l.append(nm.formatname_mitname(
+                    candidate).replace('.', '').lower())
             else:
-                row['candidate'] = normalizedname_dict[cid]
+                candidate_l.append(normalizedname_dict[cid])
+        president['candidate'] = candidate_l
 
         # final transformation steps
         president.loc[(president['candidate_id'] == "P99999999"),
