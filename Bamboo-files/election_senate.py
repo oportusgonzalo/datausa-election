@@ -18,7 +18,7 @@ class TransformStep(PipelineStep):
     def expand_year(df):
         candidate_list = []
         for index, row in df.iterrows():
-            name, party, state, year_list, candidate_id=row.values
+            name, party, state, year_list, candidate_id = row.values
             for year in year_list:
                 candidate_list.append([name, party, state, int(year), candidate_id])
         return candidate_list
