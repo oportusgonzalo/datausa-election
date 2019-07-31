@@ -50,8 +50,8 @@ class TransformStep(PipelineStep):
         final_compare = nm.nlp_dict(senate, senate_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         merge = nm.merge_insig(final_compare, senate)
-        # logger.debug(len(merge[0]))
-        # logger.debug(merge[0])
+        logger.debug(len(merge[0]))
+        logger.debug(merge[0])
         # logger.debug(nm.check(final_compare).head())
         # creating a dictionary for the candidate name and it's doictionary
         senate_Id_dict = collections.defaultdict(str)
@@ -97,11 +97,14 @@ class TransformStep(PipelineStep):
                 candidate_l.append(normalizedname_dict[cid])
 
         senate['candidate'] = candidate_l
+        # Creating an additional column where if candidate_id = S99999999 the name will be replaced with Other and stored in candidate_other
+        senate['candidate_other'] = senate['candidate']
         # final transformation steps
-        # senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate'] = "Other"
+        senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate_other'] = "Other"
         # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
         # fec_mit_result.to_csv("MIT_fec_senate_NLTK_fuzzywuzzy.csv", index=False)
         # senate.to_csv("Senate_election_1976-2016.csv", index=False)
+        # logger.debug(len(senate))
         return senate
 
 
@@ -120,5 +123,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
-        load_step = LoadStep("senate_election", connector=params["output-db"], connector_path=__file__,  if_exists="append", pk=['candidate_id'], engine="ReplacingMergeTree", engine_params="version")
+        load_step = LoadStep("senate_election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]
