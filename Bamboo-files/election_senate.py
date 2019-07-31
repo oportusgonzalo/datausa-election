@@ -2,10 +2,12 @@ import collections
 import sys
 import os
 import pandas as pd
+import numpy as np
 import nlp_method as nm
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
+from bamboo_lib.logger import logger
 from shared_steps import ExtractFECStep
 
 
@@ -13,33 +15,39 @@ class TransformStep(PipelineStep):
 
     # method for expnading the year
     @staticmethod
-    def expand_year(nd):
+    def expand_year(df):
         candidate_list = []
-        for index, row in nd.iterrows():
+        for index, row in df.iterrows():
             row_list = row.values
-            temp = row_list[3]
-            for year in temp:
-                candidate_list.append([row_list[0], row_list[1], row_list[2], int(year), row_list[4]])
+            name = row_list[0]
+            party = row_list[1]
+            state = row_list[2]
+            year_list = row_list[3]
+            candidate_id = row_list[4]
+            for year in year_list:
+                candidate_list.append([name, party, state, int(year), candidate_id])
         return candidate_list
 
     def run_step(self, prev_result, params):
-        df = prev_result[0]
+        senate, senate_candidate = prev_result
         # transformation script removing null values and formating the data
-        senate = pd.read_csv(df, delimiter="\t")
+        senate = pd.read_csv(senate, delimiter="\t")
         senate['state_fips'] = "04000US" + senate.state_fips.astype(str).str.zfill(2)
         senate["office"] = "Senate"
         senate.loc[(senate['candidate'].isnull()), 'candidate'] = 'Other'
         senate.loc[(senate['party'].isnull()), 'party'] = 'Other'
         senate['party'] = senate['party'].str.title()
-        senate.loc[(senate["writein"] == "False"), "writein"] = False
-        senate.loc[(senate["writein"] == "True"), "writein"] = True
-        senate.loc[((senate['candidate'] == "Blank Vote/Scattering") | (senate['candidate'] == "Blank Vote/Void Vote/Scattering") | (senate['candidate'] == "Blank Vote") | (senate['candidate'] == "blank vote") | (senate['candidate'] == "Scatter") | (senate['candidate'] == "scatter") | (senate['candidate'] == "Void Vote") | (senate['candidate'] == "Over Vote") | (senate['candidate'] == "None Of The Above") | (senate['candidate'] == "None Of These Candidates") | (senate['candidate'] == "Not Designated")), 'party'] = "Unavailable"
-        senate.loc[((senate['candidate'] == "Blank Vote/Scattering") | (senate['candidate'] == "Blank Vote/Void Vote/Scattering") | (senate['candidate'] == "Blank Vote") | (senate['candidate'] == "blank vote") | (senate['candidate'] == "Scatter") | (senate['candidate'] == "scatter") | (senate['candidate'] == "Void Vote") | (senate['candidate'] == "Over Vote") | (senate['candidate'] == "None Of The Above") | (senate['candidate'] == "None Of These Candidates") | (senate['candidate'] == "Not Designated")), 'candidate'] = "Blank Vote"
+        unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Vote", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
+        senate.loc[(senate.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
+        senate.loc[(senate.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
+        senate.loc[(senate['stage'] == "gen"), 'stage'] = "General"
+        senate.loc[(senate['stage'] == "pre"), 'stage'] = "Primary"
         senate.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
         senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
+        senate['special'] = senate['special'].astype(np.int64)
+        senate['unofficial'] = senate['unofficial'].astype(np.int64)
 
         # importing the FEC data
-        senate_candidate = prev_result[1]
         senate_candidate1 = senate_candidate.loc[:, ["name", "party_full", "state", "election_years", "candidate_id"]]
         senate_candidate1 = pd.DataFrame(self.expand_year(senate_candidate1))
         senate_candidate1.columns = ["name", "party", "state", "year", "candidate_id"]
@@ -47,9 +55,9 @@ class TransformStep(PipelineStep):
         final_compare = nm.nlp_dict(senate, senate_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         merge = nm.merge_insig(final_compare, senate)
-        print(len(merge[0]))
-        print(merge[0])
-        # print(nm.check(final_compare).head())
+        # logger.debug(len(merge[0]))
+        # logger.debug(merge[0])
+        # logger.debug(nm.check(final_compare).head())
         # creating a dictionary for the candidate name and it's doictionary
         senate_Id_dict = collections.defaultdict(str)
         for candidate in senate_candidate['name'].values:
@@ -92,6 +100,7 @@ class TransformStep(PipelineStep):
                     candidate_l.append("Other")
             else:
                 candidate_l.append(normalizedname_dict[cid])
+
         senate['candidate'] = candidate_l
         # final transformation steps
         # senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate'] = "Other"
@@ -116,5 +125,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
-        load_step = LoadStep("Senate_Election", connector=params["output-db"], connector_path=__file__,  if_exists="append")
+        load_step = LoadStep("senate_election", connector=params["output-db"], connector_path=__file__,  if_exists="append", pk=['candidate_id'], engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]
