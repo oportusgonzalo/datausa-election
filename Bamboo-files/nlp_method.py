@@ -1,7 +1,7 @@
-import pandas as pd
 import collections
 import re
 import nltk
+import datetime
 from fuzzywuzzy import process, fuzz
 
 
@@ -109,7 +109,7 @@ def check(check_dict):
             unmatched += 1
         else:
             partialmatched += 1
-    return pd.DataFrame([matched, unmatched, partialmatched], index=["Matched_fully", "Blank_string", "Matched_partially"])
+    return [matched, unmatched, partialmatched]
 
 
 # Method for normalizing the name
@@ -137,7 +137,7 @@ def normalize_name(name):
     b = name.find(')')  # using these we remove the "(.........)" any kind of this string
     c = name.find('/')  # removing the Vice President's name if give in the FEC data such as candidate / vice president of candidate
     if a != -1 and b != -1:
-        name = name[:a]+name[b+1:]
+        name = name[:a] + name[b + 1:]
     if c != -1:
         name = name.split('/')[0]
     name_list = name.split(',')
@@ -166,7 +166,7 @@ def merge_insig(d, df):
                 cvote = byyear.sum()['candidatevotes']
                 tvote = byyear.sum()['totalvotes']
                 for year in cvote.index:
-                    percentage = cvote[year]/tvote[year]*100
+                    percentage = cvote[year] / tvote[year] * 100
                     if percentage > 5:
                         keep.append(candidate)
                         kept = True
@@ -179,10 +179,11 @@ def merge_insig(d, df):
 
 # Method for generating the dictionary
 # gap variables gives the difference between the election years
-# bool is true if it's presidential data else it is false
+# bool is true if it's presidential data by state else it is false
 def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
     final_l = []
-    for year in range(1976, 2020, gap):
+    d = datetime.date.today()
+    for year in range(1976, (d.year + 1), gap):
         if bool:
             fec_candidate_list = [modify_fecname(candidate, False).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
@@ -191,6 +192,6 @@ def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
             mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
         fpass_result = fpass(fec_candidate_list, mit_canidate_list)
         # print("fpass done",year)
-        final_l = final_l+out(fpass_result, fec_candidate_list)
+        final_l = final_l + out(fpass_result, fec_candidate_list)
         # print("spass done",year)
     return result(final_l)
