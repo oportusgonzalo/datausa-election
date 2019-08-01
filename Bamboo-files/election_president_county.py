@@ -83,6 +83,9 @@ class TransformStep(PipelineStep):
         try:
             president['FIPS'] = "05000US" + \
                 president['FIPS'].astype(int).astype(str).str.zfill(5)
+            president.loc[(president['FIPS'].str.contains("05000US027")),
+                          'FIPS'] = '99999AK' + \
+                president['FIPS'].str.slice(start=6)
         # Above logic incorrect, throw exception!
         except Exception:
             null_county = president.loc[
@@ -90,6 +93,10 @@ class TransformStep(PipelineStep):
             raise Exception(
                 'There exists null FIPS codes in the database. ' +
                 'The county is: ' + str(null_county))
+
+        # Hardcoded Oglala County SD fips fix
+        president.loc[(president['FIPS'] == '05000US46113'),
+                      'FIPS'] = '05000US46102'
 
         # Fix null party values
         president.loc[(president['party'].isnull()), 'party'] = 'Other'
@@ -161,7 +168,7 @@ class TransformStep(PipelineStep):
             normalizedname_dict[cid] = nm.normalize_name(name)
 
         # replacing the Normalized name from FEC data in MIT data
-        candidate_l=[]
+        candidate_l = []
         for index, row in president.iterrows():
             cid = row['candidate_id']
             name = row['candidate']
@@ -170,7 +177,7 @@ class TransformStep(PipelineStep):
                 candidate_l.append(name)
                 continue
             elif cid == "P99999999":
-                candiadte_l.append(nm.formatname_mitname(
+                candidate_l.append(nm.formatname_mitname(
                     candidate).replace('.', '').lower())
             else:
                 candidate_l.append(normalizedname_dict[cid])
