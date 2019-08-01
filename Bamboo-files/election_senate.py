@@ -49,10 +49,15 @@ class TransformStep(PipelineStep):
 
         final_compare = nm.nlp_dict(senate, senate_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
+        matched, unmatched, partialmatch = nm.check(final_compare)
         merge = nm.merge_insig(final_compare, senate)
-        logger.debug(len(merge[0]))
-        logger.debug(merge[0])
-        # logger.debug(nm.check(final_compare).head())
+        total_candidate_count = matched + unmatched + partialmatch
+        logger.debug("Total number of candidates are " + str(total_candidate_count))
+        logger.debug("Number of missed significant candidates with respect to blank string is " + str(round(((len(merge[0]) / unmatched) * 100), 2)) + "%")
+        logger.debug("Number of missed significant candidates with respect to total number of candidates are " + str(round(((len(merge[0]) / total_candidate_count) * 100), 2)) + "%")
+        logger.debug("Number of perfect match are " + str(round(((matched / total_candidate_count) * 100), 2)) + "%")
+        logger.debug("Number of partial match are " + str(round(((partialmatch / total_candidate_count) * 100), 2)) + "%")
+        logger.debug("Names of significant candidate " + str(merge[0]))
         # creating a dictionary for the candidate name and it's doictionary
         senate_Id_dict = collections.defaultdict(str)
         for candidate in senate_candidate['name'].values:
@@ -104,7 +109,6 @@ class TransformStep(PipelineStep):
         # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
         # fec_mit_result.to_csv("MIT_fec_senate_NLTK_fuzzywuzzy.csv", index=False)
         # senate.to_csv("Senate_election_1976-2016.csv", index=False)
-        # logger.debug(len(senate))
         return senate
 
 
