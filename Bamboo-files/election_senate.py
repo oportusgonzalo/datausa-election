@@ -38,7 +38,7 @@ class TransformStep(PipelineStep):
         senate.loc[(senate['stage'] == "gen"), 'stage'] = "General"
         senate.loc[(senate['stage'] == "pre"), 'stage'] = "Primary"
         senate.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
-        senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
+        # senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
         senate['special'] = senate['special'].astype(np.int64)
         senate['unofficial'] = senate['unofficial'].astype(np.int64)
 
@@ -106,9 +106,11 @@ class TransformStep(PipelineStep):
         senate['candidate_other'] = senate['candidate']
         # final transformation steps
         senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate_other'] = "Other"
-        # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
-        # fec_mit_result.to_csv("MIT_fec_senate_NLTK_fuzzywuzzy.csv", index=False)
+        senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
+        fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
+        fec_mit_result.to_csv("MIT_fec_senate_NLTK_fuzzywuzzy_bla.csv", index=False)
         # senate.to_csv("Senate_election_1976-2016.csv", index=False)
+        # logger.debug(len(senate))
         return senate
 
 
