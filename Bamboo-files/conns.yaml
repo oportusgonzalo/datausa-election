@@ -49,3 +49,7 @@ usp-data:
 uspc-data:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
   uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/VOQCHQ/FQ9NBF
+
+ussenate-data:
+  driver: bamboo_lib.connectors.drivers.http.HttpDriver
+  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/PEJ5QU/XXQCIK
