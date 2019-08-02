@@ -5,6 +5,9 @@ import datetime
 from fuzzywuzzy import process, fuzz
 
 
+# bool_flag = False
+
+
 # Modification method
 # bool value is true when we want reverse the string that is wehn the candidate name is not from presidential data
 def modify_fecname(name, bool):
@@ -54,7 +57,7 @@ def fpass(fec_list_names, mit_list_names):
 
 
 # final pass
-def out(fpass_dict, fec_list_names):
+def out(fpass_dict, fec_list_names, bool_flag):
     # fpass_dict is the dictionary of the output from the fpass
     compare = []
     for mit_name, fec_possible_match in fpass_dict.items():
@@ -70,6 +73,12 @@ def out(fpass_dict, fec_list_names):
                     if dist < min_dist and dist <= 0.75 and fuzz.partial_ratio(mit_name, cvalues[0]) >= 83:
                         min_dist = dist
                         match_string = cvalues[0]
+                if bool_flag and (mit_name not in ['blank vote', 'other', 'unavailable']) and match_string == "":
+                     cvalues = possible_match[0]
+                     mit_name_list = mit_name.strip('jr').strip('iii').strip().split(' ')
+                     fec_name_list = cvalues[0].strip().split(' ')
+                     if mit_name_list[len(mit_name_list)-1] == fec_name_list[len(fec_name_list)-1]:
+                         match_string=cvalues[0]
                 compare.append([mit_name, match_string])
             else:
                 compare.append([mit_name, fec_possible_match[0]])
@@ -187,11 +196,26 @@ def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
         if bool:
             fec_candidate_list = [modify_fecname(candidate, False).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
-        else:
+            fpass_result = fpass(fec_candidate_list, mit_canidate_list)
+            # print("fpass done",year)
+            final_l = final_l + out(fpass_result, fec_candidate_list, False)
+            # print("spass done",year)
+        elif not bool and mit_candidate_df['office'].unique() == "President":
             fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
-        fpass_result = fpass(fec_candidate_list, mit_canidate_list)
-        # print("fpass done",year)
-        final_l = final_l + out(fpass_result, fec_candidate_list)
-        # print("spass done",year)
+            fpass_result = fpass(fec_candidate_list, mit_canidate_list)
+            # print("fpass done",year)
+            final_l = final_l + out(fpass_result, fec_candidate_list, False)
+            # print("spass done",year)
+        else:
+            # global bool_flag
+            # bool_flag = True
+            states = mit_candidate_df['state_po'].unique()
+            for state in states:
+                fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[((fec_candidate_df["year"] == year)  & ((fec_candidate_df["state"] == state))), "name"].unique()]
+                mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[((mit_candidate_df["year"] == year)  & ((mit_candidate_df["state_po"] == state))), "candidate"].unique()]
+                fpass_result = fpass(fec_candidate_list, mit_canidate_list)
+                # print("fpass done",year)
+                final_l = final_l + out(fpass_result, fec_candidate_list, True)
+                # print("spass done",year)
     return result(final_l)
