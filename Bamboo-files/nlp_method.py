@@ -81,7 +81,7 @@ def out(fpass_dict, fec_list_names, bool_flag):
                     mit_name_temp = mit_name.replace('-', ' ')
                     mit_name_list = re.sub(r' jr| iii| ii| iv|-', '', mit_name_temp).split(' ')
                     for cvalues in possible_match:
-                        fec_name_list = cvalues[0].strip().split(' ')
+                        fec_name_list = cvalues[0].strip('"').strip().split(' ')
                         if mit_name_list[len(mit_name_list) - 1] == fec_name_list[len(fec_name_list) - 1]:
                             match_string = cvalues[0]
                             break
@@ -163,6 +163,18 @@ def normalize_name(name):
     return ' '.join(append_suff((fn + " " + ln).title()).split())
 
 
+# helper method to get the details about the result after performing the NLP methods
+def helper(final_compare, merge_insigni_list):
+    matched, unmatched, partialmatch = check(final_compare)
+    total_candidate_count = matched + unmatched + partialmatch
+    logger.info("Total number of candidates are " + str(total_candidate_count))
+    logger.info("Number of missed significant candidates with respect to blank string is " + str(round(((len(merge_insigni_list[0]) / unmatched) * 100), 2)) + "%")
+    logger.info("Number of missed significant candidates with respect to total number of candidates are " + str(round(((len(merge_insigni_list[0]) / total_candidate_count) * 100), 2)) + "%")
+    logger.info("Number of perfect match are " + str(round(((matched / total_candidate_count) * 100), 2)) + "%")
+    logger.info("Number of partial match are " + str(round(((partialmatch / total_candidate_count) * 100), 2)) + "%")
+    logger.info("Names of significant candidate " + str(merge_insigni_list[0]))
+
+
 # Merges all insignificant candidates (Done by the percentage of votes recieved and name matching)
 # d is the dictionary of candidates
 # df is the main dataframe
@@ -182,7 +194,7 @@ def merge_insig(d, df):
                 tvote = byyear.sum()['totalvotes']
                 for year in cvote.index:
                     percentage = cvote[year] / tvote[year] * 100
-                    if percentage > 10:
+                    if percentage > 5:
                         keep.append(candidate)
                         kept = True
                         break
@@ -216,5 +228,5 @@ def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
                 mit_canidate_list = [formatname_mitname(candidate).replace('.', '').replace('"', '').replace('?', '\'').replace('_', ' ').lower() for candidate in mit_candidate_df.loc[((mit_candidate_df["year"] == year) & ((mit_candidate_df["state_po"] == state))), "candidate"].unique()]
                 fpass_result = fpass(fec_candidate_list, mit_canidate_list)
                 final_l = final_l + out(fpass_result, fec_candidate_list, True)
-        logger.info("spass done " + str(year))
+        logger.info("Second NLP Pass Done for {}".format(year))
     return result(final_l)
