@@ -15,22 +15,21 @@ class TransformStep(PipelineStep):
 
     # method for expnading the year
     @staticmethod
-    def expand_year(nd):
+    def expand_year(df):
         candidate_list = []
-        for index, row in nd.iterrows():
+        for index, row in df.iterrows():
             name, party, state, district, year_list, candidate_id = row.values
             for year in year_list:
                 candidate_list.append([name, party, state, district, int(year), candidate_id])
         return candidate_list
 
+
+
     def run_step(self, prev_result, params):
         house, house_candidate = prev_result
         # transformation script removing null values and formating the data
         house = pd.read_csv(house, delimiter="\t")
-        # house['state_fips'] = self.state_fips_code(house['state_fips'])
-        # house['district'] = self.district_fips(house['district'], house['state_fips'])
         house['district'] = "50000US" + house.state_fips.astype(str).str.zfill(2) + house.district.astype(str).str.zfill(2)
-        # house.drop(["state_cen", "state_ic", "state_po", "state_fips", "mode"], axis=1, inplace=True)
         house["office"] = "House"
         house.loc[(house['runoff'].isnull()), 'runoff'] = False
         house.loc[((house['candidate'].isnull()) | (house["candidate"] == "other")), 'candidate'] = 'Other'
@@ -40,6 +39,8 @@ class TransformStep(PipelineStep):
         house.loc[(house.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         house.loc[(house["candidate"] == "no name"), 'candidate'] = "Unavailable"
         house.loc[(house['stage'].isnull()), 'stage'] = 'gen'
+        house.loc[(house['stage'] == 'gen'), 'stage'] = 'General'
+        house.loc[(house['stage'] == 'pri'), 'stage'] = 'Primary'
         house['party'] = house['party'].str.title()
         house.rename(columns={'state': 'geo_name', 'district': 'geo_id'}, inplace=True)
 
@@ -47,22 +48,12 @@ class TransformStep(PipelineStep):
         house_candidate1 = house_candidate.loc[:, ["name", "party_full", "state", "district", "election_years", "candidate_id"]]
         house_candidate1 = pd.DataFrame(self.expand_year(house_candidate1))
         house_candidate1.columns = ["name", "party", "state", "district", "year", "candidate_id"]
-        # for index, row in house_candidate1.iterrows():
-        # house_candidate1['district'] = district_fips_list
-        # house_candidate1.to_csv("bla", index=False)
 
         final_compare = nm.nlp_dict(house, house_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
-        matched, unmatched, partialmatch = nm.check(final_compare)
         merge = nm.merge_insig(final_compare, house)
-        total_candidate_count = matched + unmatched + partialmatch
-        logger.info("Total number of candidates are " + str(total_candidate_count))
-        logger.info("Number of missed significant candidates with respect to blank string is " + str(round(((len(merge[0]) / unmatched) * 100), 2)) + "%")
-        logger.info("Number of missed significant candidates with respect to total number of candidates are " + str(round(((len(merge[0]) / total_candidate_count) * 100), 2)) + "%")
-        logger.info("Number of perfect match are " + str(round(((matched / total_candidate_count) * 100), 2)) + "%")
-        logger.info("Number of partial match are " + str(round(((partialmatch / total_candidate_count) * 100), 2)) + "%")
-        logger.info("Names of significant candidate " + str(merge[0]))
-        # creating a dictionary for the candidate name and it's doictionary
+        nm.helper(final_compare, merge)
+        # creating a dictionary for the candidate name in fec data in the format of modified names as key and id as it's value
         house_Id_dict = collections.defaultdict(str)
         for candidate in house_candidate['name'].values:
             temp_id = house_candidate.loc[(house_candidate['name'] == candidate), 'candidate_id'].values
@@ -112,13 +103,10 @@ class TransformStep(PipelineStep):
         house['special'] = house['special'].astype(np.int64)
         house['runoff'] = house['runoff'].astype(np.int64)
         house['unofficial'] = house['unofficial'].astype(np.int64)
-        fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
-        fec_mit_result.to_csv("MIT_fec_house_NLTK_fuzzywuzzy.csv", index=False)
-        house.to_csv("House_election_1976-2016.csv", index=False)
         return house
 
 
-class ExamplePipeline(EasyPipeline):
+class ElectionHousePipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
