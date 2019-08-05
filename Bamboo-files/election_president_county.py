@@ -203,7 +203,7 @@ class TransformStep(PipelineStep):
         return president
 
 
-class ExamplePipeline(EasyPipeline):
+class ElectionPipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
