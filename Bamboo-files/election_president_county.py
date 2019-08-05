@@ -194,13 +194,18 @@ class TransformStep(PipelineStep):
             np.int64)
         president['totalvotes'] = president['totalvotes'].astype(np.int64)
 
-        # Seperate Alaskan house districts into their own dimension table
-        if params.get("alaska-table", False):
-            ak_house_dist = president.loc[(
-                president['geo_id'].str.contains('99999AK')),
-                ['geo_id', 'geo_name']]
-            ak_house_dist = ak_house_dist.drop_duplicates()
         return president
+
+
+class AlaskaHouseStep():
+    def run_step(self, prev_result, params):
+        # Seperate Alaskan house districts into their own dimension table
+        president = prev_result
+        ak_house_dist = president.loc[(
+            president['geo_id'].str.contains('99999AK')),
+            ['geo_id', 'geo_name']]
+        ak_house_dist = ak_house_dist.drop_duplicates()
+        return ak_house_dist
 
 
 class ElectionPipeline(EasyPipeline):
@@ -223,6 +228,16 @@ class ElectionPipeline(EasyPipeline):
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election", connector=params["output-db"],
-            connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'],
+            connector_path=__file__, if_exists="append",
+            pk=['year', 'candidate_id', 'party'],
             engine="ReplacingMergeTree", engine_params="version")
-        return [dl_step, fec_step, xform_step, load_step]
+        ak_house_step = AlaskaHouseStep()
+        ak_house_load_step = LoadStep(
+            "alaska_housedist", connector=params["output-db"],
+            connector_path=__file__, if_exists="append",
+            pk=['geo_id', 'geo_name'])
+        if params.get("alaska-table", False):
+            return [dl_step, fec_step, xform_step, load_step, ak_house_step,
+                    ak_house_load_step]
+        else:
+            return [dl_step, fec_step, xform_step, load_step]
