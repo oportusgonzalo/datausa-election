@@ -38,7 +38,6 @@ class TransformStep(PipelineStep):
         senate.loc[(senate['stage'] == "gen"), 'stage'] = "General"
         senate.loc[(senate['stage'] == "pre"), 'stage'] = "Primary"
         senate.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
-        # senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
         senate['special'] = senate['special'].astype(np.int64)
         senate['unofficial'] = senate['unofficial'].astype(np.int64)
 
