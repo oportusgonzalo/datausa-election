@@ -16,17 +16,16 @@ class TransformStep(PipelineStep):
     def expand_year(nd):
         candidate_list = []
         for index, row in nd.iterrows():
-            row_list = row.values
-            temp = row_list[2]
-            # temp = temp.strip('{').strip('}').split(',')
-            for year in temp:
-                candidate_list.append([row_list[0], row_list[1], int(year), row_list[3]])
+            # row_list = row.values
+            name, party, year_list, candidate_id = row.values
+            for year in year_list:
+                candidate_list.append([name, party, int(year), candidate_id])
         return candidate_list
 
     def run_step(self, prev_result, params):
-        df = prev_result[0]
+        president, president_candidate = prev_result
         # transformation script removing null values and formating the data
-        president = pd.read_csv(df, delimiter="\t")
+        president = pd.read_csv(president, delimiter="\t")
         president['state_fips'] = "04000US" + president.state_fips.astype(str).str.zfill(2)
         president["office"] = "President"
         president.loc[president["writein"] == "False", "writein"] = False
@@ -40,17 +39,14 @@ class TransformStep(PipelineStep):
         president.loc[(president['candidate'].isnull()), 'candidate'] = "Unavailable"
         president.loc[(president['year'] == 2012) & (president['candidate'] == "Mitt, Romney"), 'candidate'] = "Romney, Mitt"
         president.loc[((president['party'].isnull()) & (president['candidate'] == "Other")), 'party'] = "Other"
-        president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'party'] = "Unavailable"
-        president.loc[((president['candidate'] == "Blank Vote") | (president['candidate'] == "Blank Vote/Scattering") | (president['candidate'] == "Blank Vote/Scattering/ Void Vote") | (president['candidate'] == "Blank Vote/Void Vote/Scattering") | (president['candidate'] == "Scattering") | (president['candidate'] == "Void Vote") | (president['candidate'] == "Over Vote") | (president['candidate'] == "None Of The Above") | (president['candidate'] == "None Of These Candidates") | (president['candidate'] == "Not Designated")), 'candidate'] = "Blank Vote"
+        unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Vote", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
+        president.loc[(president.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
+        president.loc[(president.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         president['party'] = president['party'].str.title()
         president.drop(["notes", "state_cen", "state_ic", "state_po", "writein"], axis=1, inplace=True)
         president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
 
         # importing the FEC data
-        # URL for the fec data
-        # url = "https://cg-519a459a-0ea3-42c2-b7bc-fa1143481f74.s3.us-gov-west-1.amazonaws.com/c7da9e486a631e8ba0766e118b658c5ecbab4e9d55754288eaa4c6b9.csv?response-content-disposition=filename%3Dcandidates-2019-07-22T10%3A07%3A11.csv&AWSAccessKeyId=AKIAR7FXZINYKQPW5N4V&Signature=uaaiCC4q6ngP0WXBo7GI%2BmFO9k4%3D&Expires=1564409232"
-        # president_candidate = pd.read_csv(url)  # this url step will be replaced once we start using the custom ExtractFECdata step
-        president_candidate = prev_result[1]
         president_candidate1 = president_candidate.loc[:, ['name', 'party_full', 'election_years', 'candidate_id']]
         president_candidate1 = pd.DataFrame(self.expand_year(president_candidate1))
         president_candidate1.columns = ["name", "party", "year", "candidate_id"]
@@ -60,6 +56,8 @@ class TransformStep(PipelineStep):
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         # merge = nm.merge_insig(final_compare, president)
         # print(len(merge[0]))
+        # print(merge[1])
+        # print(nm.check(final_compare))
         # creating a dictionary for the candidate name and it's doictionary
         president_Id_dict = collections.defaultdict(str)
         for candidate in president_candidate['name'].values:
@@ -102,7 +100,7 @@ class TransformStep(PipelineStep):
                 else:
                     temp1 = sl[0].strip().strip('\"').split(' ')
                     temp2 = sl[1].strip().strip('\"').split(' ')
-                    candidate_l.append(temp2[0]+' '+temp1[0])
+                    candidate_l.append(temp2[0] + ' ' + temp1[0])
             else:
                 candidate_l.append(normalizedname_dict[cid])
         president['candidate'] = candidate_l
@@ -131,5 +129,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
-        load_step = LoadStep("president_election", connector=params["output-db"], connector_path=__file__,  if_exists="append")
+        load_step = LoadStep("president_election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]
