@@ -42,9 +42,9 @@ class TransformStep(PipelineStep):
         return candidate_list
 
     def run_step(self, prev_result, params):
-        df = prev_result[0]
+        president, president_candidate = prev_result
         # transformation script removing null values and formating the data
-        president = pd.read_csv(df, delimiter="\t")
+        president = pd.read_csv(president, delimiter="\t")
 
         # Fills in null state_po's
         null_state_po = {}
@@ -121,7 +121,6 @@ class TransformStep(PipelineStep):
             president['year'])
 
         # importing the FEC data
-        president_candidate = prev_result[1]
         president_candidate1 = president_candidate.loc[:, [
             'name', 'party_full', 'election_years', 'candidate_id']]
         president_candidate1 = pd.DataFrame(
@@ -198,7 +197,8 @@ class TransformStep(PipelineStep):
         # Seperate Alaskan house districts into their own dimension table
         if params.get("alaska-table", False):
             ak_house_dist = president.loc[(
-                president['geo_id'].str.contains('99999AK')), ['geo_id', 'geo_name']]
+                president['geo_id'].str.contains('99999AK')),
+                ['geo_id', 'geo_name']]
             ak_house_dist = ak_house_dist.drop_duplicates()
         return president
 
@@ -223,5 +223,6 @@ class ExamplePipeline(EasyPipeline):
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election", connector=params["output-db"],
-            connector_path=__file__,  if_exists="append", pk=['candidate_id'])
+            connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'],
+            engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]
