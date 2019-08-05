@@ -31,19 +31,20 @@ class TransformStep(PipelineStep):
 
     # method for expnading the year
     @staticmethod
-    def expand_year(df):
+    def expand_year(nd):
         candidate_list = []
-        for index, row in df.iterrows():
-            # row_list = row.values
-            name, party, year_list, candidate_id = row.values
-            for year in year_list:
-                candidate_list.append([name, party, int(year), candidate_id])
+        for index, row in nd.iterrows():
+            row_list = row.values
+            temp = row_list[2]
+            for year in temp:
+                candidate_list.append(
+                    [row_list[0], row_list[1], int(year), row_list[3]])
         return candidate_list
 
     def run_step(self, prev_result, params):
-        president, president_candidate = prev_result
+        df = prev_result[0]
         # transformation script removing null values and formating the data
-        president = pd.read_csv(president, delimiter="\t")
+        president = pd.read_csv(df, delimiter="\t")
 
         # Fills in null state_po's
         null_state_po = {}
@@ -120,6 +121,7 @@ class TransformStep(PipelineStep):
             president['year'])
 
         # importing the FEC data
+        president_candidate = prev_result[1]
         president_candidate1 = president_candidate.loc[:, [
             'name', 'party_full', 'election_years', 'candidate_id']]
         president_candidate1 = pd.DataFrame(
@@ -192,6 +194,12 @@ class TransformStep(PipelineStep):
         president['candidatevotes'] = president['candidatevotes'].astype(
             np.int64)
         president['totalvotes'] = president['totalvotes'].astype(np.int64)
+
+        # Seperate Alaskan house districts into their own dimension table
+        if params.get("alaska-table", False):
+            ak_house_dist = president.loc[(
+                president['geo_id'].str.contains('99999AK')), ['geo_id', 'geo_name']]
+            ak_house_dist = ak_house_dist.drop_duplicates()
         return president
 
 
@@ -199,8 +207,8 @@ class ExamplePipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
-            Parameter("year", dtype=int),
             Parameter("force", dtype=bool),
+            Parameter("alaska-table", dtype=bool),
             Parameter(label="Output database connector",
                       name="output-db", dtype=str, source=Connector)
         ]
@@ -215,6 +223,5 @@ class ExamplePipeline(EasyPipeline):
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election", connector=params["output-db"],
-            connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'],
-            engine="ReplacingMergeTree", engine_params="version")
+            connector_path=__file__,  if_exists="append", pk=['candidate_id'])
         return [dl_step, fec_step, xform_step, load_step]
