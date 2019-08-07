@@ -164,7 +164,9 @@ def normalize_name(name):
 
 
 # helper method to get the details about the result after performing the NLP methods
-def helper(final_compare, merge_insigni_list):
+# final_compare is the output from the final results after the comparison performed using the nlp_dict method
+# merge_insigni_list contains the list of significant and insignificant list
+def logging_helper(final_compare, merge_insigni_list):
     matched, unmatched, partialmatch = check(final_compare)
     total_candidate_count = matched + unmatched + partialmatch
     logger.info("Total number of candidates are " + str(total_candidate_count))
