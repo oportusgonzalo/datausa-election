@@ -100,9 +100,6 @@ class TransformStep(PipelineStep):
         house['special'] = house['special'].astype(np.int64)
         house['runoff'] = house['runoff'].astype(np.int64)
         house['unofficial'] = house['unofficial'].astype(np.int64)
-        # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
-        # fec_mit_result.to_csv("MIT_fec_house_NLTK_fuzzywuzzy.csv", index=False)
-        # house.to_csv("House_election.csv", index=False)
         return house
 
 
