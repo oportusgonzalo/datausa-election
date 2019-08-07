@@ -7,7 +7,6 @@ import nlp_method as nm
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
-from bamboo_lib.logger import logger
 from shared_steps import ExtractFECStep
 
 
@@ -49,7 +48,7 @@ class TransformStep(PipelineStep):
         final_compare = nm.nlp_dict(senate, senate_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         merge = nm.merge_insig(final_compare, senate)
-        nm.helper(final_compare, merge)
+        nm.logging_helper(final_compare, merge)
         # creating a dictionary for the candidate name and it's doictionary
         senate_Id_dict = collections.defaultdict(str)
         for candidate in senate_candidate['name'].values:
