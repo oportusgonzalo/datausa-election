@@ -7,7 +7,6 @@ import numpy as np
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
-from bamboo_lib.logger import logger
 from shared_steps import ExtractFECStep
 
 
@@ -22,8 +21,6 @@ class TransformStep(PipelineStep):
             for year in year_list:
                 candidate_list.append([name, party, state, district, int(year), candidate_id])
         return candidate_list
-
-
 
     def run_step(self, prev_result, params):
         house, house_candidate = prev_result
@@ -52,7 +49,7 @@ class TransformStep(PipelineStep):
         final_compare = nm.nlp_dict(house, house_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         merge = nm.merge_insig(final_compare, house)
-        nm.helper(final_compare, merge)
+        nm.logging_helper(final_compare, merge)
         # creating a dictionary for the candidate name in fec data in the format of modified names as key and id as it's value
         house_Id_dict = collections.defaultdict(str)
         for candidate in house_candidate['name'].values:
@@ -103,6 +100,9 @@ class TransformStep(PipelineStep):
         house['special'] = house['special'].astype(np.int64)
         house['runoff'] = house['runoff'].astype(np.int64)
         house['unofficial'] = house['unofficial'].astype(np.int64)
+        # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
+        # fec_mit_result.to_csv("MIT_fec_house_NLTK_fuzzywuzzy.csv", index=False)
+        # house.to_csv("House_election.csv", index=False)
         return house
 
 
