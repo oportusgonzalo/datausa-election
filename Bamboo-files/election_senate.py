@@ -7,7 +7,6 @@ import nlp_method as nm
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
-from bamboo_lib.logger import logger
 from shared_steps import ExtractFECStep
 
 
@@ -38,7 +37,6 @@ class TransformStep(PipelineStep):
         senate.loc[(senate['stage'] == "gen"), 'stage'] = "General"
         senate.loc[(senate['stage'] == "pre"), 'stage'] = "Primary"
         senate.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
-        # senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
         senate['special'] = senate['special'].astype(np.int64)
         senate['unofficial'] = senate['unofficial'].astype(np.int64)
 
@@ -49,15 +47,8 @@ class TransformStep(PipelineStep):
 
         final_compare = nm.nlp_dict(senate, senate_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
-        matched, unmatched, partialmatch = nm.check(final_compare)
         merge = nm.merge_insig(final_compare, senate)
-        total_candidate_count = matched + unmatched + partialmatch
-        logger.debug("Total number of candidates are " + str(total_candidate_count))
-        logger.debug("Number of missed significant candidates with respect to blank string is " + str(round(((len(merge[0]) / unmatched) * 100), 2)) + "%")
-        logger.debug("Number of missed significant candidates with respect to total number of candidates are " + str(round(((len(merge[0]) / total_candidate_count) * 100), 2)) + "%")
-        logger.debug("Number of perfect match are " + str(round(((matched / total_candidate_count) * 100), 2)) + "%")
-        logger.debug("Number of partial match are " + str(round(((partialmatch / total_candidate_count) * 100), 2)) + "%")
-        logger.debug("Names of significant candidate " + str(merge[0]))
+        nm.logging_helper(final_compare, merge)
         # creating a dictionary for the candidate name and it's doictionary
         senate_Id_dict = collections.defaultdict(str)
         for candidate in senate_candidate['name'].values:
@@ -66,7 +57,7 @@ class TransformStep(PipelineStep):
         # creating a list of candidate id for the candidates in the MIT data and also replacing the name of candidates having less than 5% of votes and naming them as Other
         id_list = []
         for candidate in senate['candidate'].values:
-            temp = nm.formatname_mitname(candidate).replace('.', '').lower()
+            temp = nm.formatname_mitname(candidate).replace('.', '').replace('"', '').replace('?', '\'').replace('_', ' ').lower()
             if temp in ['blank vote', 'other', 'unavailable']:
                 id_list.append("S99999999")
             elif temp in final_compare:
@@ -94,7 +85,7 @@ class TransformStep(PipelineStep):
                 candidate_l.append(name)
                 continue
             elif cid == "S99999999":
-                if nm.formatname_mitname(name).replace('.', '').lower() in merge[0]:
+                if nm.formatname_mitname(name).replace('.', '').replace('"', '').replace('?', '\'').replace('_', ' ').lower() in merge[0]:
                     candidate_l.append(nm.formatname_mitname(name).title())
                 else:
                     candidate_l.append("Other")
@@ -107,14 +98,10 @@ class TransformStep(PipelineStep):
         # final transformation steps
         senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate_other'] = "Other"
         senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
-        fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
-        fec_mit_result.to_csv("MIT_fec_senate_NLTK_fuzzywuzzy_bla.csv", index=False)
-        # senate.to_csv("Senate_election_1976-2016.csv", index=False)
-        # logger.debug(len(senate))
         return senate
 
 
-class ExamplePipeline(EasyPipeline):
+class ElectionSenatePipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [

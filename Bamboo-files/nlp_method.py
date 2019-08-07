@@ -3,7 +3,7 @@ import re
 import nltk
 import datetime
 from fuzzywuzzy import process, fuzz
-
+from bamboo_lib.logger import logger
 
 # bool_flag = False
 
@@ -60,10 +60,14 @@ def fpass(fec_list_names, mit_list_names):
 def out(fpass_dict, fec_list_names, bool_flag):
     # fpass_dict is the dictionary of the output from the fpass
     compare = []
+    # if len(fec_list_names) == 1 and fec_list_names[0] == ''
+    #     return []
     for mit_name, fec_possible_match in fpass_dict.items():
         # if the length of the dictonary is 1 and contains a null value we use fuzzy wuzzy logic to extract all the possible outcomes.
         # After the possible matches we run the jakkard similarity test to get the closest possible and also confirms it's partial ratio 83% to avoid false postitives
-        if len(fec_possible_match) == 1:
+        if len(fec_list_names) == 0:
+            compare.append([mit_name, ''])
+        elif len(fec_possible_match) == 1:
             if fec_possible_match[0] == "":
                 possible_match = process.extract(mit_name, fec_list_names)
                 min_dist = 1.1
@@ -74,11 +78,13 @@ def out(fpass_dict, fec_list_names, bool_flag):
                         min_dist = dist
                         match_string = cvalues[0]
                 if bool_flag and (mit_name not in ['blank vote', 'other', 'unavailable']) and match_string == "":
-                     cvalues = possible_match[0]
-                     mit_name_list = mit_name.strip('jr').strip('iii').strip().split(' ')
-                     fec_name_list = cvalues[0].strip().split(' ')
-                     if mit_name_list[len(mit_name_list)-1] == fec_name_list[len(fec_name_list)-1]:
-                         match_string=cvalues[0]
+                    mit_name_temp = mit_name.replace('-', ' ')
+                    mit_name_list = re.sub(r' jr| iii| ii| iv|-', '', mit_name_temp).split(' ')
+                    for cvalues in possible_match:
+                        fec_name_list = cvalues[0].strip('"').strip().split(' ')
+                        if mit_name_list[len(mit_name_list) - 1] == fec_name_list[len(fec_name_list) - 1]:
+                            match_string = cvalues[0]
+                            break
                 compare.append([mit_name, match_string])
             else:
                 compare.append([mit_name, fec_possible_match[0]])
@@ -141,7 +147,7 @@ def append_suff(postfix_string):
 
 # normalize the name
 def normalize_name(name):
-    name = re.sub(r"MR.|DR.|MRS.|MS.|PROF.|PH.D.|PROFESSOR|SENATOR", "", name)
+    name = re.sub(r"MR.|DR.|MRS.|MS.|PROF.|PH.D.|PROFESSOR|SENATOR|REP.", "", name)
     a = name.find('(')  # finding the location of '(' and ')' in a string for exaple Gearald ford (NOT A President candidate)
     b = name.find(')')  # using these we remove the "(.........)" any kind of this string
     c = name.find('/')  # removing the Vice President's name if give in the FEC data such as candidate / vice president of candidate
@@ -155,6 +161,20 @@ def normalize_name(name):
     ln = name_list[0]
     fn = ' '.join(name_list[1].split())
     return ' '.join(append_suff((fn + " " + ln).title()).split())
+
+
+# helper method to get the details about the result after performing the NLP methods
+# final_compare is the output from the final results after the comparison performed using the nlp_dict method
+# merge_insigni_list contains the list of significant and insignificant list
+def logging_helper(final_compare, merge_insigni_list):
+    matched, unmatched, partialmatch = check(final_compare)
+    total_candidate_count = matched + unmatched + partialmatch
+    logger.info("Total number of candidates are " + str(total_candidate_count))
+    logger.info("Number of missed significant candidates with respect to blank string is " + str(round(((len(merge_insigni_list[0]) / unmatched) * 100), 2)) + "%")
+    logger.info("Number of missed significant candidates with respect to total number of candidates are " + str(round(((len(merge_insigni_list[0]) / total_candidate_count) * 100), 2)) + "%")
+    logger.info("Number of perfect match are " + str(round(((matched / total_candidate_count) * 100), 2)) + "%")
+    logger.info("Number of partial match are " + str(round(((partialmatch / total_candidate_count) * 100), 2)) + "%")
+    logger.info("Names of significant candidate " + str(merge_insigni_list[0]))
 
 
 # Merges all insignificant candidates (Done by the percentage of votes recieved and name matching)
@@ -197,25 +217,18 @@ def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
             fec_candidate_list = [modify_fecname(candidate, False).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
             fpass_result = fpass(fec_candidate_list, mit_canidate_list)
-            # print("fpass done",year)
             final_l = final_l + out(fpass_result, fec_candidate_list, False)
-            # print("spass done",year)
         elif not bool and mit_candidate_df['office'].unique() == "President":
             fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
             fpass_result = fpass(fec_candidate_list, mit_canidate_list)
-            # print("fpass done",year)
             final_l = final_l + out(fpass_result, fec_candidate_list, False)
-            # print("spass done",year)
         else:
-            # global bool_flag
-            # bool_flag = True
             states = mit_candidate_df['state_po'].unique()
             for state in states:
-                fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[((fec_candidate_df["year"] == year)  & ((fec_candidate_df["state"] == state))), "name"].unique()]
-                mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[((mit_candidate_df["year"] == year)  & ((mit_candidate_df["state_po"] == state))), "candidate"].unique()]
+                fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[((fec_candidate_df["year"] == year) & ((fec_candidate_df["state"] == state))), "name"].unique()]
+                mit_canidate_list = [formatname_mitname(candidate).replace('.', '').replace('"', '').replace('?', '\'').replace('_', ' ').lower() for candidate in mit_candidate_df.loc[((mit_candidate_df["year"] == year) & ((mit_candidate_df["state_po"] == state))), "candidate"].unique()]
                 fpass_result = fpass(fec_candidate_list, mit_canidate_list)
-                # print("fpass done",year)
                 final_l = final_l + out(fpass_result, fec_candidate_list, True)
-                # print("spass done",year)
+        logger.info("Second NLP Pass Done for {}".format(year))
     return result(final_l)
