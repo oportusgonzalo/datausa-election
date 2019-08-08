@@ -4,7 +4,6 @@ import sys
 import pandas as pd
 import nlp_method as nm
 import numpy as np
-import shutil
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -46,21 +45,7 @@ class TransformStep(PipelineStep):
         house_candidate1 = house_candidate.loc[:, ["name", "party_full", "state", "district", "election_years", "candidate_id"]]
         house_candidate1 = pd.DataFrame(self.expand_year(house_candidate1))
         house_candidate1.columns = ["name", "party", "state", "district", "year", "candidate_id"]
-
-        try:
-            os.mkdir("temp")
-            final_compare = nm.nlp_dict(house, house_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
-            fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
-            fec_mit_result.to_csv("temp/nlp_match.csv", index=False)
-        except Exception:
-            update_nlp_match = pd.read_csv("temp/nlp_match.csv")
-            update_nlp_match.fillna('',inplace=True)
-            final_compare = update_nlp_match.set_index('MIT data').T.to_dict('list')
-            temp_dict = collections.defaultdict(str)
-            for name in final_compare:
-                temp_dict[name] = final_compare[name][0]
-            final_compare = temp_dict
-            shutil.rmtree("temp")
+        final_compare = nm.nlp_dict(house, house_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         merge = nm.merge_insig(final_compare, house)
         nm.logging_helper(final_compare, merge)
