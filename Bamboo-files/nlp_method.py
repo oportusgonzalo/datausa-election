@@ -2,12 +2,11 @@ import collections
 import re
 import nltk
 import datetime
+import os
 import pandas as pd
 from fuzzywuzzy import process, fuzz
 from bamboo_lib.logger import logger
 from bamboo_lib import helpers
-
-# bool_flag = False
 
 
 # Modification method
@@ -218,9 +217,9 @@ def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
     final_l = []
     d = datetime.date.today()
     path = helpers.grab_parent_dir(__file__)
-    path += "/resource/candidate_mapping.csv"
+    path = os.path.join(path, "resource/candidate_mapping.csv")
     nlp_refrence_df = pd.read_csv(path)
-    nlp_refrence_dict = nlp_refrence_df.set_index('Mit_name').T.to_dict('list')
+    nlp_refrence_dict = nlp_refrence_df.set_index('mit_name').T.to_dict('list')
     for year in range(1976, (d.year + 1), gap):
         if bool:
             fec_candidate_list = [modify_fecname(candidate, False).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
