@@ -2,10 +2,11 @@ import collections
 import re
 import nltk
 import datetime
+import os
+import pandas as pd
 from fuzzywuzzy import process, fuzz
 from bamboo_lib.logger import logger
-
-# bool_flag = False
+from bamboo_lib import helpers
 
 
 # Modification method
@@ -34,12 +35,15 @@ def interruptable_substring_subsequence(s1, s2, s1_length, s2_length):
 
 
 # first pass on the data matching
-def fpass(fec_list_names, mit_list_names):
+def fpass(fec_list_names, mit_list_names, refrence_dict):
     # fec_list_names is a list of candidate from fec and mit_list_names is a list of candidates from mit
     # output will be a dictionary
     first_dict = collections.defaultdict(list)
     for candidate in mit_list_names:
         flag = 0
+        if candidate in refrence_dict:
+            first_dict[candidate].append(refrence_dict[candidate][0])
+            continue
         for fec_name in fec_list_names:
             # if i is equal to j we append it to the list of the hashmap for the name in the mit data
             if candidate == fec_name:
@@ -212,23 +216,27 @@ def merge_insig(d, df):
 def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
     final_l = []
     d = datetime.date.today()
+    path = helpers.grab_parent_dir(__file__)
+    path = os.path.join(path, "resource/candidate_mapping.csv")
+    nlp_refrence_df = pd.read_csv(path)
+    nlp_refrence_dict = nlp_refrence_df.set_index('mit_name').T.to_dict('list')
     for year in range(1976, (d.year + 1), gap):
         if bool:
             fec_candidate_list = [modify_fecname(candidate, False).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [candidate.replace('\\', '').replace('"', '').replace(',', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
-            fpass_result = fpass(fec_candidate_list, mit_canidate_list)
+            fpass_result = fpass(fec_candidate_list, mit_canidate_list, nlp_refrence_dict)
             final_l = final_l + out(fpass_result, fec_candidate_list, False)
         elif not bool and mit_candidate_df['office'].unique() == "President":
             fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[(fec_candidate_df["year"] == year), "name"].unique()]
             mit_canidate_list = [formatname_mitname(candidate).replace('.', '').lower() for candidate in mit_candidate_df.loc[(mit_candidate_df["year"] == year), "candidate"].unique()]
-            fpass_result = fpass(fec_candidate_list, mit_canidate_list)
+            fpass_result = fpass(fec_candidate_list, mit_canidate_list, nlp_refrence_dict)
             final_l = final_l + out(fpass_result, fec_candidate_list, False)
         else:
             states = mit_candidate_df['state_po'].unique()
             for state in states:
                 fec_candidate_list = [modify_fecname(candidate, True).lower() for candidate in fec_candidate_df.loc[((fec_candidate_df["year"] == year) & ((fec_candidate_df["state"] == state))), "name"].unique()]
                 mit_canidate_list = [formatname_mitname(candidate).replace('.', '').replace('"', '').replace('?', '\'').replace('_', ' ').lower() for candidate in mit_candidate_df.loc[((mit_candidate_df["year"] == year) & ((mit_candidate_df["state_po"] == state))), "candidate"].unique()]
-                fpass_result = fpass(fec_candidate_list, mit_canidate_list)
+                fpass_result = fpass(fec_candidate_list, mit_canidate_list, nlp_refrence_dict)
                 final_l = final_l + out(fpass_result, fec_candidate_list, True)
         logger.info("Second NLP Pass Done for {}".format(year))
     return result(final_l)

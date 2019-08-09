@@ -45,7 +45,6 @@ class TransformStep(PipelineStep):
         house_candidate1 = house_candidate.loc[:, ["name", "party_full", "state", "district", "election_years", "candidate_id"]]
         house_candidate1 = pd.DataFrame(self.expand_year(house_candidate1))
         house_candidate1.columns = ["name", "party", "state", "district", "year", "candidate_id"]
-
         final_compare = nm.nlp_dict(house, house_candidate1, 2, False)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
         merge = nm.merge_insig(final_compare, house)
