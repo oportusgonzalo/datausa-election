@@ -31,13 +31,14 @@ class TransformStep(PipelineStep):
 
     # method for expnading the year
     @staticmethod
-    def expand_year(df):
+    def expand_year(nd):
         candidate_list = []
-        for index, row in df.iterrows():
-            # row_list = row.values
-            name, party, year_list, candidate_id = row.values
-            for year in year_list:
-                candidate_list.append([name, party, int(year), candidate_id])
+        for index, row in nd.iterrows():
+            row_list = row.values
+            temp = row_list[2]
+            for year in temp:
+                candidate_list.append(
+                    [row_list[0], row_list[1], int(year), row_list[3]])
         return candidate_list
 
     def run_step(self, prev_result, params):
@@ -192,15 +193,27 @@ class TransformStep(PipelineStep):
         president['candidatevotes'] = president['candidatevotes'].astype(
             np.int64)
         president['totalvotes'] = president['totalvotes'].astype(np.int64)
+
         return president
 
 
-class ExamplePipeline(EasyPipeline):
+class AlaskaHouseStep():
+    def run_step(self, prev_result, params):
+        # Seperate Alaskan house districts into their own dimension table
+        president = prev_result
+        ak_house_dist = president.loc[(
+            president['geo_id'].str.contains('99999AK')),
+            ['geo_id', 'geo_name']]
+        ak_house_dist = ak_house_dist.drop_duplicates()
+        return ak_house_dist
+
+
+class ElectionPipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
-            Parameter("year", dtype=int),
             Parameter("force", dtype=bool),
+            Parameter("alaska-table", dtype=bool),
             Parameter(label="Output database connector",
                       name="output-db", dtype=str, source=Connector)
         ]
@@ -215,6 +228,16 @@ class ExamplePipeline(EasyPipeline):
         xform_step = TransformStep()
         load_step = LoadStep(
             "president_election", connector=params["output-db"],
-            connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'],
+            connector_path=__file__, if_exists="append",
+            pk=['year', 'candidate_id', 'party'],
             engine="ReplacingMergeTree", engine_params="version")
-        return [dl_step, fec_step, xform_step, load_step]
+        ak_house_step = AlaskaHouseStep()
+        ak_house_load_step = LoadStep(
+            "alaska_housedist", connector=params["output-db"],
+            connector_path=__file__, if_exists="append",
+            pk=['geo_id', 'geo_name'])
+        if params.get("alaska-table", False):
+            return [dl_step, fec_step, xform_step, load_step, ak_house_step,
+                    ak_house_load_step]
+        else:
+            return [dl_step, fec_step, xform_step, load_step]
