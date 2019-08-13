@@ -40,13 +40,13 @@
     <Annotation name="dim_type">PARTY</Annotation>
     </Dimension>
 
-    <Dimension foreign_key="year" name="Year" source="president_election">
+    <Dimension dim_type="time" foreign_key="year" name="Year" source="president_election">
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year">
           <Annotation name="default_year">2016</Annotation>
         </Level>
       </Hierarchy>
-    <Annotation dim_type="time">YEAR</Annotation>
+    <Annotation name="dim_type">YEAR</Annotation>
     </Dimension>
 
     <Dimension foreign_key="version" name="Version" source="president_election">
@@ -119,11 +119,11 @@
       </Hierarchy>
     </Dimension>
 
-    <Dimension foreign_key="year" name="Year" source="senate_election">
+    <Dimension dim_type="time" foreign_key="year" name="Year" source="senate_election">
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year"/>
       </Hierarchy>
-    <Annotation dim_type="time">YEAR</Annotation>
+    <Annotation name="dim_type">YEAR</Annotation>
     <Annotation name="default_year">2016</Annotation>
     </Dimension>
 
@@ -207,11 +207,11 @@
       </Hierarchy>
     </Dimension>
 
-    <Dimension foreign_key="year" name="Year" source="house_election">
+    <Dimension  dim_type="time" foreign_key="year" name="Year" source="house_election">
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year"/>
       </Hierarchy>
-    <Annotation dim_type="time">YEAR</Annotation>
+    <Annotation name="dim_type">YEAR</Annotation>
     <Annotation name="default_year">2016</Annotation>
     </Dimension>
 
