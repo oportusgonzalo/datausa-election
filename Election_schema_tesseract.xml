@@ -46,7 +46,7 @@
           <Annotation name="default_year">2016</Annotation>
         </Level>
       </Hierarchy>
-    <Annotation name="dim_type">YEAR</Annotation>
+    <Annotation dim_type="time">YEAR</Annotation>
     </Dimension>
 
     <Dimension foreign_key="version" name="Version" source="president_election">
@@ -123,7 +123,7 @@
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year"/>
       </Hierarchy>
-    <Annotation name="dim_type">YEAR</Annotation>
+    <Annotation dim_type="time">YEAR</Annotation>
     <Annotation name="default_year">2016</Annotation>
     </Dimension>
 
@@ -211,7 +211,7 @@
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year"/>
       </Hierarchy>
-    <Annotation name="dim_type">YEAR</Annotation>
+    <Annotation dim_type="time">YEAR</Annotation>
     <Annotation name="default_year">2016</Annotation>
     </Dimension>
 
