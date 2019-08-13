@@ -74,7 +74,6 @@
   <Annotation name="source_link"> https://www.fec.gov/ </Annotation>
   <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special </Annotation>
   <Annotation name="hidden_dimensions">Unofficial, Version</Annotation>
-
     <Table name="senate_election" primary_key="candidate_id"/>
 
     <Dimension name="Geography" foreign_key="geo_id" source="acs_test.shapes2017_states" default_hierarchy="Geography_State">
@@ -145,14 +144,14 @@
   </Cube>
 
   <Cube name="Data_USA_House_election">
-    <Annotation name="source_name"> MIT Data Electionlab </Annotation>
-    <Annotation name="source_link"> https://electionlab.mit.edu/data </Annotation>
-    <Annotation name="dataset_name"> 1976-2018 House </Annotation>
-    <Annotation name="dataset_link"> https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/IG0UN2/8KAB8V </Annotation>
-    <Annotation name="source_name"> Federal Election Commision</Annotation>
-    <Annotation name="source_link"> https://www.fec.gov/ </Annotation>
-    <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special </Annotation>
-    <Annotation name="hidden_dimensions">Unofficial, Version</Annotation>
+  <Annotation name="source_name"> MIT Data Electionlab </Annotation>
+  <Annotation name="source_link"> https://electionlab.mit.edu/data </Annotation>
+  <Annotation name="dataset_name"> 1976-2018 House </Annotation>
+  <Annotation name="dataset_link"> https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/IG0UN2/8KAB8V </Annotation>
+  <Annotation name="source_name"> Federal Election Commision</Annotation>
+  <Annotation name="source_link"> https://www.fec.gov/ </Annotation>
+  <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special </Annotation>
+  <Annotation name="hidden_dimensions">Unofficial, Version</Annotation>
     <Table name="house_election" primary_key="candidate_id"/>
 
     <Dimension foreign_key="geo_id" name="Geography" source="house_election">
