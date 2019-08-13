@@ -1,13 +1,13 @@
 <Schema name="Data_USA_election">
   <Cube name="Data_USA_President_election">
-  <Annotation name="source_name"> MIT Data Electionlab </Annotation>
-  <Annotation name="source_link"> https://electionlab.mit.edu/data </Annotation>
-  <Annotation name="dataset_name"> 1976-2016 President </Annotation>
-  <Annotation name="dataset_link"> https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O </Annotation>
-  <Annotation name="dataset_name"> Countypres_2000-2016 President </Annotation>
-  <Annotation name="dataset_link"> https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/VOQCHQ/FQ9NBF </Annotation>
-  <Annotation name="source_name"> Federal Election Commision</Annotation>
-  <Annotation name="source_link"> https://www.fec.gov/ </Annotation>
+  <Annotation name="source_name">MIT Data Electionlab</Annotation>
+  <Annotation name="source_link">https://electionlab.mit.edu/data</Annotation>
+  <Annotation name="dataset_name">1976-2016 President</Annotation>
+  <Annotation name="dataset_link">https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O</Annotation>
+  <Annotation name="dataset_name">Countypres_2000-2016 President</Annotation>
+  <Annotation name="dataset_link">https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/VOQCHQ/FQ9NBF</Annotation>
+  <Annotation name="source_name">Federal Election Commision</Annotation>
+  <Annotation name="source_link">https://www.fec.gov/</Annotation>
   <Annotation name="available_dimensions">Candidate, Geography, Party, Year</Annotation>
   <Annotation name="hidden_dimensions">Version</Annotation>
     <Table name="president_election" primary_key="candidate_id"/>
@@ -56,23 +56,23 @@
     </Dimension>
 
     <Measure name="Candidate Votes" column="candidatevotes" aggregator="sum" visible="true">
-      <Annotation name="unit_of_measurement">CANDIDATE VOTES </Annotation>
+      <Annotation name="unit_of_measurement">CANDIDATE VOTES</Annotation>
     </Measure>
 
     <Measure name="Total Votes" column="totalvotes" aggregator="avg" visible="true">
-      <Annotation name="unit_of_measurement">TOTAL VOTES </Annotation>
+      <Annotation name="unit_of_measurement">TOTAL VOTES</Annotation>
     </Measure>
 
   </Cube>
 
   <Cube name="Data_USA_Senate_election">
-  <Annotation name="source_name"> MIT Data Electionlab </Annotation>
-  <Annotation name="source_link"> https://electionlab.mit.edu/data </Annotation>
-  <Annotation name="dataset_name"> 1976-2018 Senate </Annotation>
-  <Annotation name="dataset_link"> https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/PEJ5QU/XXQCIK </Annotation>
-  <Annotation name="source_name"> Federal Election Commision</Annotation>
-  <Annotation name="source_link"> https://www.fec.gov/ </Annotation>
-  <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special </Annotation>
+  <Annotation name="source_name">MIT Data Electionlab</Annotation>
+  <Annotation name="source_link">https://electionlab.mit.edu/data</Annotation>
+  <Annotation name="dataset_name">1976-2018 Senate</Annotation>
+  <Annotation name="dataset_link">https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/PEJ5QU/XXQCIK</Annotation>
+  <Annotation name="source_name">Federal Election Commision</Annotation>
+  <Annotation name="source_link">https://www.fec.gov/</Annotation>
+  <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special</Annotation>
   <Annotation name="hidden_dimensions">Unofficial, Version</Annotation>
     <Table name="senate_election" primary_key="candidate_id"/>
 
@@ -134,23 +134,23 @@
     </Dimension>
 
     <Measure name="Candidate Votes" column="candidatevotes" aggregator="sum" visible="true">
-      <Annotation name="unit_of_measurement">CANDIDATE VOTES </Annotation>
+      <Annotation name="unit_of_measurement">CANDIDATE VOTES</Annotation>
     </Measure>
 
     <Measure name="Total Votes" column="totalvotes" aggregator="avg" visible="true">
-      <Annotation name="unit_of_measurement">TOTAL VOTES </Annotation>
+      <Annotation name="unit_of_measurement">TOTAL VOTES</Annotation>
     </Measure>
 
   </Cube>
 
   <Cube name="Data_USA_House_election">
-  <Annotation name="source_name"> MIT Data Electionlab </Annotation>
-  <Annotation name="source_link"> https://electionlab.mit.edu/data </Annotation>
-  <Annotation name="dataset_name"> 1976-2018 House </Annotation>
-  <Annotation name="dataset_link"> https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/IG0UN2/8KAB8V </Annotation>
-  <Annotation name="source_name"> Federal Election Commision</Annotation>
-  <Annotation name="source_link"> https://www.fec.gov/ </Annotation>
-  <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special </Annotation>
+  <Annotation name="source_name">MIT Data Electionlab</Annotation>
+  <Annotation name="source_link">https://electionlab.mit.edu/data</Annotation>
+  <Annotation name="dataset_name">1976-2018 House</Annotation>
+  <Annotation name="dataset_link">https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/IG0UN2/8KAB8V</Annotation>
+  <Annotation name="source_name">Federal Election Commision</Annotation>
+  <Annotation name="source_link">https://www.fec.gov/</Annotation>
+  <Annotation name="available_dimensions">Candidate, Geography, Party, Year, Candidate Other, Special</Annotation>
   <Annotation name="hidden_dimensions">Unofficial, Version</Annotation>
     <Table name="house_election" primary_key="candidate_id"/>
 
@@ -222,11 +222,11 @@
     </Dimension>
 
     <Measure name="Candidate Votes" column="candidatevotes" aggregator="sum" visible="true">
-      <Annotation name="unit_of_measurement">CANDIDATE VOTES </Annotation>
+      <Annotation name="unit_of_measurement">CANDIDATE VOTES</Annotation>
     </Measure>
 
     <Measure name="Total Votes" column="totalvotes" aggregator="avg" visible="true">
-      <Annotation name="unit_of_measurement">TOTAL VOTES </Annotation>
+      <Annotation name="unit_of_measurement">TOTAL VOTES</Annotation>
     </Measure>
 
   </Cube>
