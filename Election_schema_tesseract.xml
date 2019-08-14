@@ -40,7 +40,7 @@
     <Annotation name="dim_type">PARTY</Annotation>
     </Dimension>
 
-    <Dimension dim_type="time" foreign_key="year" name="Year" source="president_election">
+    <Dimension type="time" foreign_key="year" name="Year" source="president_election">
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year">
           <Annotation name="default_year">2016</Annotation>
@@ -119,7 +119,7 @@
       </Hierarchy>
     </Dimension>
 
-    <Dimension dim_type="time" foreign_key="year" name="Year" source="senate_election">
+    <Dimension type="time" foreign_key="year" name="Year" source="senate_election">
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year"/>
       </Hierarchy>
@@ -207,7 +207,7 @@
       </Hierarchy>
     </Dimension>
 
-    <Dimension  dim_type="time" foreign_key="year" name="Year" source="house_election">
+    <Dimension  type="time" foreign_key="year" name="Year" source="house_election">
       <Hierarchy name="Year" primary_key="year">
         <Level key_column="year" name="Year"/>
       </Hierarchy>
