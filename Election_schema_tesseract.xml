@@ -59,7 +59,7 @@
       <Annotation name="unit_of_measurement">CANDIDATE VOTES</Annotation>
     </Measure>
 
-    <Measure name="Total Votes" column="totalvotes" aggregator="avg" visible="true">
+    <Measure name="Total Votes" column="totalvotes" aggregator="max" visible="true">
       <Annotation name="unit_of_measurement">TOTAL VOTES</Annotation>
     </Measure>
 
@@ -137,7 +137,7 @@
       <Annotation name="unit_of_measurement">CANDIDATE VOTES</Annotation>
     </Measure>
 
-    <Measure name="Total Votes" column="totalvotes" aggregator="avg" visible="true">
+    <Measure name="Total Votes" column="totalvotes" aggregator="max" visible="true">
       <Annotation name="unit_of_measurement">TOTAL VOTES</Annotation>
     </Measure>
 
@@ -225,7 +225,7 @@
       <Annotation name="unit_of_measurement">CANDIDATE VOTES</Annotation>
     </Measure>
 
-    <Measure name="Total Votes" column="totalvotes" aggregator="avg" visible="true">
+    <Measure name="Total Votes" column="totalvotes" aggregator="max" visible="true">
       <Annotation name="unit_of_measurement">TOTAL VOTES</Annotation>
     </Measure>
 
