@@ -45,5 +45,5 @@ class ElectionSenatePipeline(EasyPipeline):
         sys.path.append(os.getcwd())
         dl_step = DownloadStep(connector=params["connector"], connector_path=__file__, force=params.get("force", False))
         xform_step = TransformStep()
-        load_step = LoadStep("electoralcollege", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'geoid'], engine="ReplacingMergeTree", engine_params="version")
+        load_step = LoadStep("electoralcollege", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'geoid'], engine="ReplacingMergeTree")
         return [dl_step, xform_step, load_step]
