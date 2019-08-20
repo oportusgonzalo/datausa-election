@@ -24,7 +24,6 @@ class TransformStep(PipelineStep):
         election_2012 = electoralcollege(election_2016_1996_democrat.loc[:, ["OBAMA 2012", "Unnamed: 7", "Unnamed: 8"]], election_2016_1996_republican.loc[:, ["ROMNEY 2012", "Unnamed: 7", "Unnamed: 8"]], 2012)  # creating the electoral collge results for the year 2012
         election_2016 = electoralcollege(election_2016_1996_democrat.loc[:, ["CLINTON 2016", "Unnamed: 2", "Unnamed: 3"]], election_2016_1996_republican.loc[:, ["TRUMP 2016", 'Unnamed: 2', "Unnamed: 3"]], 2016)  # creating the electoral collge results for the year 2016
         electoralcollege_1992_2016 = pd.concat([election_1992, election_1996, election_2000, election_2004, election_2008, election_2012, election_2016], axis=0, ignore_index=True)  # merging all the results into one table
-        print(electoralcollege_1992_2016.head())
         return electoralcollege_1992_2016
 
 
