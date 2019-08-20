@@ -2,34 +2,79 @@ import pandas as pd
 import numpy as np
 
 
-def election_democrat(df):
-    df.columns = ['state', "status", "electoralvote_democrat"]
+def electoral_vote(df, party, dict):
+    df.columns = ['geoid', 'party', 'electoralvote']
     df.drop(0, axis=0, inplace=True)  # dropping the null row
     df.reset_index(inplace=True, drop=True)  # reseting the index
     df = df.loc[:50, :]  # considering  the first 51 rows of the state
-    df.loc[(df['status'] != "W"), 'electoralvote_democrat'] = 0  # repalcing the electoral vote were they haven't got any seat
-    df.drop('status', axis=1, inplace=True)  # dropping the status column
-    df.set_index('state', inplace=True, drop=False)  # setting the sate as the index
-    df['electoralvote_democrat'] = df['electoralvote_democrat'].astype(np.int64)  # specifying the data type as integer
-    return df
-
-
-def election_republican(df):
-    df.columns = ['state', "status", "electoralvote_republican"]
-    df.drop(0, axis=0, inplace=True)  # dropping the null row
-    df.reset_index(inplace=True, drop=True)  # reseting the index
-    df = df.loc[:50, :]  # considering  the first 51 rows of the state
-    df.set_index('state', inplace=True)  # setting the sate as the index
-    df.loc[(df['status'] != "W") & (df['electoralvote_republican'] != 1), 'electoralvote_republican'] = 0   # repalcing the electoral vote were they haven't got any seat with an edge  case in 2016 where they only got the one seat in maine
-    df.drop('status', axis=1, inplace=True)  # dropping the status column
-    df['electoralvote_republican'] = df['electoralvote_republican'].astype(np.int64)  # specifying the data type as integer
+    df.loc[(df['party'] == "W") | (df['electoralvote'] == 1), 'party'] = party  # Adding the party name where the vote has been secured
+    df['geoid'] = df.geoid.apply(lambda x: x.strip('*').strip('**').strip('***').strip('****'))  # removing the *'s if present at the end
+    df.loc[(df['geoid'] == "D.C."), 'geoid'] = "District of Columbia"  # formatting the name in deired format
+    df['geoid'] = df.geoid.apply(lambda x: dict[x])  # converting the sate name to geoid
     return df
 
 
 def electoralcollege(democrat_df, republican_df, year):
-    democrat_df = election_democrat(democrat_df)  # getting the data in the derired fromat for democratic dataframe
-    republican_df = election_republican(republican_df)  # getting the data in the desired format for republican dataframe
-    df = pd.concat([democrat_df, republican_df], axis=1)  # merging both dataframe
+    geoid_state_dict = {
+    "Alabama": "04000US01",
+    "Alaska": "04000US02",
+    "Arizona": "04000US04",
+    "Arkansas": "04000US05",
+    "California": "04000US06",
+    "Connecticut": "04000US09",
+    "District of Columbia": "04000US11",
+    "Colorado": "04000US08",
+    "Delaware": "04000US10",
+    "Florida": "04000US12",
+    "Georgia": "04000US13",
+    "Hawaii": "04000US15",
+    "Idaho": "04000US16",
+    "Illinois": "04000US17",
+    "Indiana": "04000US18",
+    "Iowa": "04000US19",
+    "Kansas": "04000US20",
+    "Kentucky": "04000US21",
+    "Louisiana": "04000US22",
+    "Maine": "04000US23",
+    "Maryland": "04000US24",
+    "Massachusetts": "04000US25",
+    "Michigan": "04000US26",
+    "Minnesota": "04000US27",
+    "Mississippi": "04000US28",
+    "Missouri": "04000US29",
+    "Montana": "04000US30",
+    "Nebraska": "04000US31",
+    "Nevada": "04000US32",
+    "New Hampshire": "04000US33",
+    "New Jersey": "04000US34",
+    "New Mexico": "04000US35",
+    "New York": "04000US36",
+    "North Carolina": "04000US37",
+    "North Dakota": "04000US38",
+    "Ohio": "04000US39",
+    "Oklahoma": "04000US40",
+    "Oregon": "04000US41",
+    "Pennsylvania": "04000US42",
+    "Rhode Island": "04000US44",
+    "South Carolina": "04000US45",
+    "South Dakota": "04000US46",
+    "Tennessee": "04000US47",
+    "Texas": "04000US48",
+    "Utah": "04000US49",
+    "Vermont": "04000US50",
+    "Virginia": "04000US51",
+    "Washington": "04000US53",
+    "West Virginia": "04000US54",
+    "Wisconsin": "04000US55",
+    "Wyoming": "04000US56"
+    }
+    democrat_df = electoral_vote(democrat_df, "Democratic", geoid_state_dict)  # getting the data in the derired fromat for democratic dataframe
+    republican_df = electoral_vote(republican_df, "Republican", geoid_state_dict)  # getting the data in the desired format for republican dataframe
+    democrat_df.dropna(axis=0, inplace=True)
+    republican_df.dropna(axis=0, inplace=True)
+    df = pd.concat([democrat_df, republican_df], axis=0, ignore_index=True)  # merging both dataframe
     df['year'] = year  # creting a new column of the year
-    df.reset_index(inplace=True, drop=True)  # resetting the index
+    df['electoralvote'] = df['electoralvote'].astype(np.int64)  # specifying the data type as integer
+    cols = ['year', 'geoid', 'party', 'electoralvote']  # arranging the order of columns
+    df = df[cols]
     return df
