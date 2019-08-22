@@ -19,8 +19,8 @@ class TransformStep(PipelineStep):
             election_republican = pd.read_excel(prev_result, sheet_name=15, skiprows=[0, 1, 2, 3])  # getting the excel sheet containing the election data for 1992 republic
         # gathering the parameter values according to the requirements
         year = params["year"]
-        campaign_d = params["campaign-d"]
-        campaign_r = params["campaign-r"]
+        campaign_d = params["campaign-d"].upper() + " " + str(year)
+        campaign_r = params["campaign-r"].upper() + " " + str(year)
         col1 = "Unnamed: " + params["col1_number"]
         col2 = "Unnamed: " + params["col2_number"]
         electoral_college = electoralcollege(election_democrat.loc[:, [campaign_d, col1, col2]], election_republican.loc[:, [campaign_r, col1, col2]], year)  # getting the result
