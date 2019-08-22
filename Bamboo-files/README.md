@@ -29,5 +29,5 @@ bamboo-cli --folder . --entry ENTRY_FILE --output-db=OUTPUT-DB-CONNECTOR
 ### Executing the electoral_college script
 From cmd temrinal, run the bamboo ETL using bamboo-cli from bamboo-files folder. Replace the parameters in according the required values
 ```
-bamboo-cli --folder . --entry electoral_college --output-db=OUTPUT-DB-CONNECTOR --connector=CONNECTOR-FILE-NAME --campaign-d="CAMPAIGN-NAME-IN-FEC-DATA-DEMOCRTIC" --campaign-r="CAMPAIGN-NAME-IN-FEC-DATA-REPUBLICAN" --year=YEAR --col1_number=COLUMN-NUMBER-IN-FEC-FOR-VICTORY --col2_number=COLUMN-NUMBER-IN-FEC-FOR-ELECTORAL-VOTES
+bamboo-cli --folder . --entry electoral_college --output-db=OUTPUT-DB-CONNECTOR --connector=CONNECTOR-FILE-NAME --campaign-d="CANDIDATE_LASTNAME" --campaign-r="CANDIDATE_LASTNAME" --year=YEAR --col1_number=COLUMN-NUMBER-IN-FEC-FOR-VICTORY --col2_number=COLUMN-NUMBER-IN-FEC-FOR-ELECTORAL-VOTES
 ```
