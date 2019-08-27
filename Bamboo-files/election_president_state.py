@@ -16,7 +16,6 @@ class TransformStep(PipelineStep):
     def expand_year(df):
         candidate_list = []
         for index, row in df.iterrows():
-            # row_list = row.values
             name, party, year_list, candidate_id = row.values
             for year in year_list:
                 candidate_list.append([name, party, int(year), candidate_id])
@@ -43,6 +42,7 @@ class TransformStep(PipelineStep):
         president.loc[(president.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
         president.loc[(president.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         president['party'] = president['party'].str.title()
+        president.loc[(president['party'] == "Democrat"), 'party'] = "Democratic"
         president.drop(["notes", "state_cen", "state_ic", "state_po", "writein"], axis=1, inplace=True)
         president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
 
@@ -50,15 +50,12 @@ class TransformStep(PipelineStep):
         president_candidate1 = president_candidate.loc[:, ['name', 'party_full', 'election_years', 'candidate_id']]
         president_candidate1 = pd.DataFrame(self.expand_year(president_candidate1))
         president_candidate1.columns = ["name", "party", "year", "candidate_id"]
-        # president_candidate1.head()
 
         final_compare = nm.nlp_dict(president, president_candidate1, 4, True)  # getting the dictionary of the candidates names in MIT data and there match
         # below is the use of merge_insigni techniques to find out of the found blank strings which one is insignificant
-        # merge = nm.merge_insig(final_compare, president)
-        # print(len(merge[0]))
-        # print(merge[1])
-        # print(nm.check(final_compare))
-        # creating a dictionary for the candidate name and it's doictionary
+        merge = nm.merge_insig(final_compare, president)
+        nm.logging_helper(final_compare, merge)
+        # creating a dictionary for the candidate name in the modified names as key and values as it's id
         president_Id_dict = collections.defaultdict(str)
         for candidate in president_candidate['name'].values:
             temp_id = president_candidate.loc[(president_candidate['name'] == candidate), 'candidate_id'].values
@@ -113,7 +110,7 @@ class TransformStep(PipelineStep):
         return president
 
 
-class ExamplePipeline(EasyPipeline):
+class EelectionPresidentStatePipeline(EasyPipeline):
     @staticmethod
     def parameter_list():
         return [
@@ -129,5 +126,5 @@ class ExamplePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
-        load_step = LoadStep("president_election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+        load_step = LoadStep("president_election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]

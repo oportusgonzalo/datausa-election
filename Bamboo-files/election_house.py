@@ -31,7 +31,7 @@ class TransformStep(PipelineStep):
         house.loc[(house['runoff'].isnull()), 'runoff'] = False
         house.loc[((house['candidate'].isnull()) | (house["candidate"] == "other")), 'candidate'] = 'Other'
         house.loc[(house['party'].isnull()), 'party'] = 'Other'
-        unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Vote", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
+        unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Votes", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
         house.loc[(house.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
         house.loc[(house.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         house.loc[(house["candidate"] == "no name"), 'candidate'] = "Unavailable"
@@ -39,6 +39,7 @@ class TransformStep(PipelineStep):
         house.loc[(house['stage'] == 'gen'), 'stage'] = 'General'
         house.loc[(house['stage'] == 'pri'), 'stage'] = 'Primary'
         house['party'] = house['party'].str.title()
+        house.loc[(house['party'] == "Democrat"), 'party'] = "Democratic"
         house.rename(columns={'state': 'geo_name', 'district': 'geo_id'}, inplace=True)
 
         # importing the FEC data
