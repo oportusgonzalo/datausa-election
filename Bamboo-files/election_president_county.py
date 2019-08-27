@@ -103,7 +103,8 @@ class TransformStep(PipelineStep):
 
         # Title case parties
         president['party'] = president['party'].str.title()
-
+        president.loc[(president['party'] == "Democrat"), 'party'] = "Democratic"
+        
         # Removes null candidate votes as MIT has stated that this is just
         # the way counties reported their data.
         president = president[(president['candidatevotes'].notnull())]
