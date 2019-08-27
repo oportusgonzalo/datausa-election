@@ -31,6 +31,7 @@ class TransformStep(PipelineStep):
         senate.loc[(senate['candidate'].isnull()), 'candidate'] = 'Other'
         senate.loc[(senate['party'].isnull()), 'party'] = 'Other'
         senate['party'] = senate['party'].str.title()
+        senate.loc[(senate['party'] == "Democrat"), 'party'] = "Democratic"
         unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Vote", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
         senate.loc[(senate.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
         senate.loc[(senate.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
@@ -39,6 +40,8 @@ class TransformStep(PipelineStep):
         senate.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
         senate['special'] = senate['special'].astype(np.int64)
         senate['unofficial'] = senate['unofficial'].astype(np.int64)
+        senate['version'].fillna(99998899,inplace=True)
+        senate['version'] = senate['version'].astype(np.int64)
 
         # importing the FEC data
         senate_candidate1 = senate_candidate.loc[:, ["name", "party_full", "state", "election_years", "candidate_id"]]
