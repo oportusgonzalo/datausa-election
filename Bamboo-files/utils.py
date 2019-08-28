@@ -3,13 +3,15 @@ import numpy as np
 
 
 def electoral_vote(df, party, dict):
+    pd.set_option('mode.chained_assignment', None)
     df.columns = ['geoid', 'party', 'electoralvote']
     df.drop(0, axis=0, inplace=True)  # dropping the null row
     df.reset_index(inplace=True, drop=True)  # reseting the index
     df = df.loc[:50, :]  # considering  the first 51 rows of the state
     df.loc[(df['party'] == "W") | (df['electoralvote'] == 1), 'party'] = party  # Adding the party name where the vote has been secured
     df['geoid'] = df.geoid.apply(lambda x: x.strip('*').strip())  # removing the *'s if present at the end
-    df.loc[(df['geoid'] == "D.C."), 'geoid'] = "District of Columbia"  # formatting the name in deired format
+    different_statename_dc = ['D.C.', 'DC']
+    df.loc[(df.geoid.isin(different_statename_dc)), 'geoid'] = "District of Columbia"  # formatting the name in deired format
     df['geoid'] = df.geoid.apply(lambda x: dict[x])  # converting the sate name to geoid
     assert df[(df['party'] == party) & df.geoid.isnull()].empty, "The geoname not found in the dictionary"
     return df
