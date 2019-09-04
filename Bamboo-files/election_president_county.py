@@ -228,7 +228,7 @@ class ElectionPipeline(EasyPipeline):
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
         load_step = LoadStep(
-            "president_election", connector=params["output-db"],
+            "election_president", connector=params["output-db"],
             connector_path=__file__, if_exists="append",
             pk=['year', 'candidate_id', 'party'],
             engine="ReplacingMergeTree", engine_params="version")
