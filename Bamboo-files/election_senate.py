@@ -119,5 +119,5 @@ class ElectionSenatePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
-        load_step = LoadStep("senate_election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+        load_step = LoadStep("election_senate", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]
