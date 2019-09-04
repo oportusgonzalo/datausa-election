@@ -118,5 +118,5 @@ class ElectionHousePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ush-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.HOUSE)
         xform_step = TransformStep()
-        load_step = LoadStep("house_election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+        load_step = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
         return [dl_step, fec_step, xform_step, load_step]
