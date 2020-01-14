@@ -4,6 +4,7 @@ import nlp_method as nm
 import numpy as np
 import sys
 import os
+import string
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -102,7 +103,7 @@ class TransformStep(PipelineStep):
         president.loc[(president['party'].isnull()), 'party'] = 'Other'
 
         # Title case parties
-        president['party'] = president['party'].str.title()
+        president['party'] = president['party'].apply(lambda x: string.capwords(x))
         president.loc[(president['party'] == "Democrat"), 'party'] = "Democratic"
         
         # Removes null candidate votes as MIT has stated that this is just
@@ -231,7 +232,7 @@ class ElectionPipeline(EasyPipeline):
             "election_president", connector=params["output-db"],
             connector_path=__file__, if_exists="append",
             pk=['year', 'candidate_id', 'party'],
-            engine="ReplacingMergeTree", engine_params="version")
+            engine="ReplacingMergeTree", engine_params="version", schema="election")
         ak_house_step = AlaskaHouseStep()
         ak_house_load_step = LoadStep(
             "alaska_housedist", connector=params["output-db"],
