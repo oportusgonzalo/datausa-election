@@ -2,6 +2,7 @@ import pandas as pd
 import collections
 import os
 import sys
+import string
 import nlp_method as nm
 from shared_steps import ExtractFECStep
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
@@ -41,7 +42,8 @@ class TransformStep(PipelineStep):
         unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Vote", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
         president.loc[(president.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
         president.loc[(president.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
-        president['party'] = president['party'].str.title()
+        # improved capitalization
+        president['party'] = president['party'].apply(lambda x: string.capwords(x))
         president.loc[(president['party'] == "Democrat"), 'party'] = "Democratic"
         president.drop(["notes", "state_cen", "state_ic", "state_po", "writein"], axis=1, inplace=True)
         president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
@@ -106,8 +108,29 @@ class TransformStep(PipelineStep):
         president.loc[(president['candidate_id'] == "P99999999"), 'candidate'] = "Other"
         # fec_mit_result = pd.DataFrame(list(final_compare.items()), columns=["MIT data", "FEC data"])
         # fec_mit_result.to_csv("MIT_fec_president_NLTK_fuzzywuzzy.csv", index=False)
-        # president.to_csv("President_election_1976-2016.csv", index=False)
-        return president
+        president = president.groupby(["year", "geo_name", "geo_id", "office", "candidate", "party", "version", "candidate_id"]).agg({
+            "candidatevotes": "sum",
+            "totalvotes": "max"
+        }).reset_index()
+
+        # Tag on national data:
+        president_state = president.copy()
+        president_nation = president.copy()
+        president_nation = president_nation.groupby(
+            ["year", "office", "candidate",
+            "party", "version", "candidate_id"]
+        ).agg({
+            "candidatevotes": "sum"
+        }).reset_index()
+        president_nation['geo_id'] = '01000US'
+        president_nation['geo_name'] = 'United States'
+
+        compressed_votes = president_nation.groupby("year").agg({
+            "candidatevotes": "sum"
+        }).reset_index()
+        compressed_votes.rename(columns={"candidatevotes": "totalvotes"}, inplace=True)
+        president_nation = president_nation.merge(compressed_votes, on=["year"], how="left")
+        return pd.concat([president_state, president_nation])
 
 
 class EelectionPresidentStatePipeline(EasyPipeline):
