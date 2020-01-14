@@ -22,7 +22,7 @@ if FEC_API_KEY is None:
 
 # Caches api requests for one hour in data_cache.sqlite file. Do not share
 # this file as it contains your private api key.
-requests_cache.install_cache('data_cache', expire_after=3600)
+requests_cache.install_cache('data_cache', expire_after=2592000)
 session = requests.Session()
 session.params = {
     'per_page': '100',
