@@ -217,7 +217,7 @@ def nlp_dict(mit_candidate_df, fec_candidate_df, gap, bool):
     final_l = []
     d = datetime.date.today()
     path = helpers.grab_parent_dir(__file__)
-    path = os.path.join(path, "resource/candidate_mapping.csv")
+    path = os.path.join(path, "resources/candidate_mapping.csv")
     nlp_refrence_df = pd.read_csv(path)
     nlp_refrence_dict = nlp_refrence_df.set_index('mit_name').T.to_dict('list')
     for year in range(1976, (d.year + 1), gap):
