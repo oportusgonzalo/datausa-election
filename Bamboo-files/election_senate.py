@@ -3,6 +3,7 @@ import sys
 import os
 import pandas as pd
 import numpy as np
+import string
 import nlp_method as nm
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
@@ -30,7 +31,7 @@ class TransformStep(PipelineStep):
         senate["office"] = "Senate"
         senate.loc[(senate['candidate'].isnull()), 'candidate'] = 'Other'
         senate.loc[(senate['party'].isnull()), 'party'] = 'Other'
-        senate['party'] = senate['party'].str.title()
+        senate['party'] = senate['party'].apply(lambda x: string.capwords(x))
         senate.loc[(senate['party'] == "Democrat"), 'party'] = "Democratic"
         unavailable_name_list = ["Blank Vote/Scattering", "Blank Vote/Void Vote/Scattering", "Blank Vote", "blank vote", "Scatter", "Scattering", "scatter", "Void Vote", "Over Vote", "None Of The Above", "None Of These Candidates", "Not Designated", "Blank Vote/Scattering/ Void Vote", "Void Vote"]
         senate.loc[(senate.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
