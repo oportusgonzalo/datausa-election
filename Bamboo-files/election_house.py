@@ -4,6 +4,7 @@ import sys
 import pandas as pd
 import nlp_method as nm
 import numpy as np
+import string
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -38,7 +39,7 @@ class TransformStep(PipelineStep):
         house.loc[(house['stage'].isnull()), 'stage'] = 'gen'
         house.loc[(house['stage'] == 'gen'), 'stage'] = 'General'
         house.loc[(house['stage'] == 'pri'), 'stage'] = 'Primary'
-        house['party'] = house['party'].str.title()
+        house['party'] = house['party'].apply(lambda x: string.capwords(x))
         house.loc[(house['party'] == "Democrat"), 'party'] = "Democratic"
         house.rename(columns={'state': 'geo_name', 'district': 'geo_id'}, inplace=True)
 
@@ -95,7 +96,7 @@ class TransformStep(PipelineStep):
         house['candidate'] = candidate_l
         house['candidate_other'] = house['candidate']
         # final transformation steps
-        house.loc[(house['candidate_id'] == "H99999999"), 'candidate_other'] = "Other"
+        house.loc[(house['candidate_id'] == "H99999999"), 'candidate'] = "Other"
         house.drop(["state_cen", "state_ic", "state_po", "state_fips", "mode", "writein"], axis=1, inplace=True)
         house['special'] = house['special'].astype(np.int64)
         house['runoff'] = house['runoff'].astype(np.int64)
@@ -118,5 +119,5 @@ class ElectionHousePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ush-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.HOUSE)
         xform_step = TransformStep()
-        load_step = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+        load_step = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", schema="election")
         return [dl_step, fec_step, xform_step, load_step]
