@@ -11,6 +11,28 @@ from bamboo_lib.connectors.models import Connector
 from shared_steps import ExtractFECStep
 
 
+class ManualFixStep(PipelineStep):
+    def run_step(self, senate_df, params):
+        # Fix for Angus King in Maine in 2018
+        conds = (senate_df.geo_id == '04000US23') & (senate_df.year == 2018) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 344575)
+        assert len(senate_df[conds]) == 1
+        senate_df.loc[conds, 'candidate'] = 'Angus S. King Jr.'
+        senate_df.loc[conds, 'candidate_id'] = 'S2ME00109'
+
+        # Fix for Bob Casey PA, 2006
+        conds_casey_1 = (senate_df.geo_id == '04000US42') & (senate_df.year == 2006) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 2392984)
+        assert len(senate_df[conds_casey_1]) == 1
+        senate_df.loc[conds_casey_1, 'candidate'] = 'Robert P. Casey Jr.'
+        senate_df.loc[conds_casey_1, 'candidate_id'] = 'S6PA00217'
+
+        # Fix for Bob Casey PA, 2012
+        conds_casey_2 = (senate_df.geo_id == '04000US42') & (senate_df.year == 2012) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 3021364)
+        assert len(senate_df[conds_casey_2]) == 1
+        senate_df.loc[conds_casey_2, 'candidate'] = 'Robert P. Casey Jr.'
+        senate_df.loc[conds_casey_2, 'candidate_id'] = 'S6PA00217'
+        return senate_df
+
+
 class TransformStep(PipelineStep):
 
     # method for expnading the year
@@ -120,5 +142,6 @@ class ElectionSenatePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
-        load_step = LoadStep("election_senate", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
-        return [dl_step, fec_step, xform_step, load_step]
+        manual_fix_step = ManualFixStep()
+        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+        return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
