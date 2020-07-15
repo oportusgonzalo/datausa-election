@@ -30,6 +30,10 @@ class ManualFixStep(PipelineStep):
         assert len(senate_df[conds_casey_2]) == 1
         senate_df.loc[conds_casey_2, 'candidate'] = 'Robert P. Casey Jr.'
         senate_df.loc[conds_casey_2, 'candidate_id'] = 'S6PA00217'
+
+        # Adding extra rows
+        df_extra = pd.read_csv("resources/senate_extra_rows.csv")
+        senate_df = pd.concat([senate_df, df_extra])
         return senate_df
 
 
@@ -143,5 +147,21 @@ class ElectionSenatePipeline(EasyPipeline):
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
         manual_fix_step = ManualFixStep()
-        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+        dtype = {
+            	"year": "smallint",
+                "geo_name": "varchar(255)",
+                "geo_id": "varchar(255)",
+                "office": "varchar(255)",
+                "stage": "varchar(255)",
+                "special": "int",
+                "candidate": "varchar(255)",
+                "party": "varchar(255)",
+                "candidatevotes": "int",
+                "totalvotes": "int",
+                "unofficial": "int",
+                "version": "int",
+                "candidate_id": "varchar(255)",
+                "candidate_other": "varchar(255)"
+        }
+        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
         return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
