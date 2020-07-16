@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import string
 import nlp_method as nm
+import csv
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -30,6 +31,12 @@ class ManualFixStep(PipelineStep):
         assert len(senate_df[conds_casey_2]) == 1
         senate_df.loc[conds_casey_2, 'candidate'] = 'Robert P. Casey Jr.'
         senate_df.loc[conds_casey_2, 'candidate_id'] = 'S6PA00217'
+
+        # Fix for Hubert H. Humphrey
+        conds_humphrey = (senate_df.geo_id == '04000US27') & (senate_df.year == 1976) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 1290736)
+        assert len(senate_df[conds_humphrey]) == 1
+        senate_df.loc[conds_humphrey, 'candidate'] = 'Hubert H. Humphrey'
+        senate_df.loc[conds_humphrey, 'candidate_id'] = 'S8MNXX999' # This is a made-up code, Hubert Humphrey doesn't appear in the FEC API Search.
 
         # Adding extra rows
         df_extra = pd.read_csv("resources/senate_extra_rows.csv")
