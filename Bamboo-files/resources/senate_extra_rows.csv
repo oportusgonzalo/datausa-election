@@ -1,0 +1,4 @@
+"year","geo_name","geo_id","office","stage","special","candidate","party","candidatevotes","totalvotes","unofficial","version","candidate_id","candidate_other"
+2017,"Alabama","04000US01","Senate","General",1,"Roy Moore","Republican",651972,1348720,0,20202811,"S6AL00195","Roy Moore"
+2017,"Alabama","04000US01","Senate","General",1,"Doug Jones","Democratic",673896,1348720,0,20202811,"S0AL00156","Doug Jones"
+2017,"Alabama","04000US01","Senate","General",1,"Other","Other",22852,1348720,0,20202811,"S99999999","Other"
