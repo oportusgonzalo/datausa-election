@@ -8,3 +8,4 @@ build/
 dist/
 *.sqlite
 data_cache.sql
+*.pyc

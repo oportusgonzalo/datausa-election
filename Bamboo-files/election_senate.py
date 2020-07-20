@@ -11,6 +11,45 @@ from bamboo_lib.connectors.models import Connector
 from shared_steps import ExtractFECStep
 
 
+class ManualFixStep(PipelineStep):
+    def run_step(self, senate_df, params):
+        # Fix for Angus King in Maine in 2018
+        conds = (senate_df.geo_id == '04000US23') & (senate_df.year == 2018) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 344575)
+        assert len(senate_df[conds]) == 1
+        senate_df.loc[conds, 'candidate'] = 'Angus S. King Jr.'
+        senate_df.loc[conds, 'candidate_id'] = 'S2ME00109'
+
+        # Fix for Bob Casey PA, 2006
+        conds_casey_1 = (senate_df.geo_id == '04000US42') & (senate_df.year == 2006) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 2392984)
+        assert len(senate_df[conds_casey_1]) == 1
+        senate_df.loc[conds_casey_1, 'candidate'] = 'Robert P. Casey Jr.'
+        senate_df.loc[conds_casey_1, 'candidate_id'] = 'S6PA00217'
+
+        # Fix for Bob Casey PA, 2012
+        conds_casey_2 = (senate_df.geo_id == '04000US42') & (senate_df.year == 2012) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 3021364)
+        assert len(senate_df[conds_casey_2]) == 1
+        senate_df.loc[conds_casey_2, 'candidate'] = 'Robert P. Casey Jr.'
+        senate_df.loc[conds_casey_2, 'candidate_id'] = 'S6PA00217'
+
+        # Fix for Hubert H. Humphrey
+        conds_humphrey = (senate_df.geo_id == '04000US27') & (senate_df.year == 1976) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 1290736)
+        assert len(senate_df[conds_humphrey]) == 1
+        senate_df.loc[conds_humphrey, 'candidate'] = 'Hubert H. Humphrey'
+        senate_df.loc[conds_humphrey, 'candidate_id'] = 'S8MNXX999' # This is a made-up code, Hubert Humphrey doesn't appear in the FEC API Search.
+
+        # Fix for Rick Scott, FL 2018
+        conds_scott = (senate_df.geo_id == '04000US12') & (senate_df.year == 2018) & (senate_df.candidate_id == 'S8FL00273') & (senate_df.candidatevotes == 4099505)
+        assert len(senate_df[conds_scott]) == 1
+        senate_df.loc[conds_scott, 'candidate'] = 'Rick Scott'
+        senate_df.loc[conds_scott, 'candidate_other'] = 'Rick Scott'
+
+        # Adding extra rows
+        df_extra = pd.read_csv("resources/senate_extra_rows.csv")
+        senate_df = pd.concat([senate_df, df_extra])
+        #senate_df.to_csv("senate_df.csv", index=False, quoting=csv.QUOTE_NONNUMERIC)
+        return senate_df
+
+
 class TransformStep(PipelineStep):
 
     # method for expnading the year

@@ -1,3 +1,6 @@
 fuzzywuzzy
 nltk
 requests_cache
+python-Levenshtein
+bamboo-lib
+dw-bamboo-cli
