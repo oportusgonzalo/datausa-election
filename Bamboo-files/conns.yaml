@@ -2,6 +2,10 @@ postgres-local:
   driver: bamboo_lib.connectors.drivers.postgres.PostgresDriver
   uri: postgres://$BAMBOO_DB_USER:$BAMBOO_DB_PW@$BAMBOO_DB_HOST/$BAMBOO_DB_NAME
 
+monet-backend:
+  driver: bamboo_lib.connectors.drivers.monet.MonetDriver
+  uri: monetdb://$BAMBOO_DB_USER:$BAMBOO_DB_PW@$BAMBOO_DB_HOST:50000/$BAMBOO_DB_NAME
+
 clickhouse-local:
   driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver
   uri: clickhouse://127.0.0.1/election_db

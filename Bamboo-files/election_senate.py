@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import string
 import nlp_method as nm
+import csv
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -159,5 +160,22 @@ class ElectionSenatePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
-        load_step = LoadStep("election_senate", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
-        return [dl_step, fec_step, xform_step, load_step]
+        manual_fix_step = ManualFixStep()
+        dtype = {
+            	"year": "smallint",
+                "geo_name": "varchar(255)",
+                "geo_id": "varchar(255)",
+                "office": "varchar(255)",
+                "stage": "varchar(255)",
+                "special": "int",
+                "candidate": "varchar(255)",
+                "party": "varchar(255)",
+                "candidatevotes": "int",
+                "totalvotes": "int",
+                "unofficial": "int",
+                "version": "int",
+                "candidate_id": "varchar(255)",
+                "candidate_other": "varchar(255)"
+        }
+        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
+        return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
