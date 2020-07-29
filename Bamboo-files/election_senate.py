@@ -7,7 +7,6 @@ import string
 import nlp_method as nm
 import csv
 
-from copy import copy
 from utils import NAMES_MAP
 
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
@@ -164,7 +163,7 @@ class ManualFixStep(PipelineStep):
         #senate_df.to_csv('senate_df.csv', index=False, quoting=csv.QUOTE_NONNUMERIC)
 
         # Checking for unique names assigned to candidate IDs
-        candidates_df = copy(senate_df)
+        candidates_df = senate_df.copy()
         candidates_df = candidates_df[['candidate_id', 'candidate']]
         candidates_df = candidates_df.drop_duplicates().sort_values(by='candidate_id').reset_index(drop=True)
 
