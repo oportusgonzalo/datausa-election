@@ -160,7 +160,6 @@ class ManualFixStep(PipelineStep):
         other_conds = senate_df['candidate'].isin(NAMES_MAP.keys())
         senate_df.loc[other_conds, 'candidate_id'] = senate_df.loc[other_conds, 'candidate']
         senate_df.loc[other_conds, 'candidate_id'] = senate_df.loc[other_conds, 'candidate_id'].replace(NAMES_MAP)
-        #senate_df.to_csv('senate_df.csv', index=False, quoting=csv.QUOTE_NONNUMERIC)
 
         # Checking for unique names assigned to candidate IDs
         candidates_df = senate_df.copy()
@@ -168,7 +167,6 @@ class ManualFixStep(PipelineStep):
         candidates_df = candidates_df.drop_duplicates().sort_values(by='candidate_id').reset_index(drop=True)
 
         candidates_df2 = candidates_df[candidates_df.duplicated(subset='candidate_id', keep=False)]
-        #candidates_df2.to_csv('candidates_df.csv', index=False, quoting=csv.QUOTE_NONNUMERIC)
 
         assert len(candidates_df2) == 0
         
