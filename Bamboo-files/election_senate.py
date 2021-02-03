@@ -9,7 +9,9 @@ import csv
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
-from shared_steps import ExtractFECStep
+from shared_steps import ExtractFECStep, DirectStep
+import socket
+
 
 
 class ManualFixStep(PipelineStep):
@@ -47,6 +49,8 @@ class ManualFixStep(PipelineStep):
         # Adding extra rows
         df_extra = pd.read_csv("resources/senate_extra_rows.csv")
         senate_df = pd.concat([senate_df, df_extra])
+        senate_df = senate_df[senate_df['year']> 2018]
+        print(senate_df)
         #senate_df.to_csv("senate_df.csv", index=False, quoting=csv.QUOTE_NONNUMERIC)
         return senate_df
 
@@ -64,9 +68,13 @@ class TransformStep(PipelineStep):
         return candidate_list
 
     def run_step(self, prev_result, params):
+        hostname = socket.gethostname()
+        print("hostname", hostname) 
         senate, senate_candidate = prev_result
         # transformation script removing null values and formating the data
         senate = pd.read_csv(senate, delimiter="\t")
+        senate.rename(columns = {'party_detailed': 'party'}, inplace=True)
+        senate.drop(columns = ['party_simplified'], inplace=True)
         senate['state_fips'] = "04000US" + senate.state_fips.astype(str).str.zfill(2)
         senate["office"] = "Senate"
         senate.loc[(senate['candidate'].isnull()), 'candidate'] = 'Other'
@@ -78,6 +86,7 @@ class TransformStep(PipelineStep):
         senate.loc[(senate.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         senate.loc[(senate['stage'] == "gen"), 'stage'] = "General"
         senate.loc[(senate['stage'] == "pre"), 'stage'] = "Primary"
+        senate['state'] = senate['state'].str.title()
         senate.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
         senate['special'] = senate['special'].astype(np.int64)
         senate['unofficial'] = senate['unofficial'].astype(np.int64)
@@ -142,6 +151,8 @@ class TransformStep(PipelineStep):
         # final transformation steps
         senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate_other'] = "Other"
         senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
+        
+        #print(senate.head())
         return senate
 
 
@@ -157,7 +168,8 @@ class ElectionSenatePipeline(EasyPipeline):
     @staticmethod
     def steps(params):
         sys.path.append(os.getcwd())
-        dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
+        dl_step = DirectStep()
+        #dl_step = DownloadStep(connector="ussenate-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
         manual_fix_step = ManualFixStep()
@@ -177,5 +189,23 @@ class ElectionSenatePipeline(EasyPipeline):
                 "candidate_id": "varchar(255)",
                 "candidate_other": "varchar(255)"
         }
-        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
+
+        load_step = LoadStep("election_senate", schema="election", if_exists="append",
+            connector=params["output-db"], 
+            connector_path='/Users/jelmyhermosilla/Desktop/Datawheel/datausa-election/Bamboo-files/conns.yaml',  
+            pk=['year', 'candidate_id', 'party'], 
+            engine="ReplacingMergeTree", 
+            engine_params="version",
+            dtype=dtype)
+
         return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
+        #return [dl_step, fec_step, xform_step, manual_fix_step]
+
+if __name__ == "__main__":
+    pp = ElectionSenatePipeline()
+    pp.run({
+        'year':2020,
+        'force':0,
+        'output-db': 'monet-backend'
+    })
+    print("end")

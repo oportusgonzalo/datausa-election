@@ -4,7 +4,7 @@ import os
 import sys
 import string
 import nlp_method as nm
-from shared_steps import ExtractFECStep
+from shared_steps import ExtractFECStep, DirectStep
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -26,6 +26,8 @@ class TransformStep(PipelineStep):
         president, president_candidate = prev_result
         # transformation script removing null values and formating the data
         president = pd.read_csv(president, delimiter="\t")
+        president.rename(columns = {'party_detailed': 'party'}, inplace=True)
+        president.drop(columns = ['party_simplified'], inplace=True)
         president['state_fips'] = "04000US" + president.state_fips.astype(str).str.zfill(2)
         president["office"] = "President"
         president.loc[president["writein"] == "False", "writein"] = False
@@ -43,7 +45,8 @@ class TransformStep(PipelineStep):
         president.loc[(president.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
         president.loc[(president.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         # improved capitalization
-        president['party'] = president['party'].apply(lambda x: string.capwords(x))
+        president['party'] = president['party'].str.title() #.apply(lambda x: string.capwords(x))
+        president['state'] = president['state'].str.title()
         president.loc[(president['party'] == "Democrat"), 'party'] = "Democratic"
         president.drop(["notes", "state_cen", "state_ic", "state_po", "writein"], axis=1, inplace=True)
         president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
@@ -130,7 +133,10 @@ class TransformStep(PipelineStep):
         }).reset_index()
         compressed_votes.rename(columns={"candidatevotes": "totalvotes"}, inplace=True)
         president_nation = president_nation.merge(compressed_votes, on=["year"], how="left")
-        return pd.concat([president_state, president_nation])
+        df_final = pd.concat([president_state, president_nation])
+        df_final = df_final[df_final['year']>2016]
+        print(df_final.head())
+        return df_final
 
 
 class EelectionPresidentStatePipeline(EasyPipeline):
@@ -146,8 +152,19 @@ class EelectionPresidentStatePipeline(EasyPipeline):
     @staticmethod
     def steps(params):
         sys.path.append(os.getcwd())
-        dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
+        dl_step = DirectStep()
+        #dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
         load_step = LoadStep("election_president", dtype={"geo_id": "varchar(255)", "party": "varchar(255)", "candidate_id": "varchar(255)"}, connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version", schema="election")
         return [dl_step, fec_step, xform_step, load_step]
+        #return [dl_step, fec_step, xform_step]
+
+if __name__ == "__main__":
+    pp = EelectionPresidentStatePipeline()
+    pp.run({
+        'year':2020,
+        'force':0,
+        'output-db': 'monet-backend'
+    })
+    print("end")

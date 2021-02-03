@@ -4,7 +4,7 @@ postgres-local:
 
 monet-backend:
   driver: bamboo_lib.connectors.drivers.monet.MonetDriver
-  uri: monetdb://$BAMBOO_DB_USER:$BAMBOO_DB_PW@$BAMBOO_DB_HOST:50000/$BAMBOO_DB_NAME
+  uri: monetdb://$BAMBOO_DB_USER:$BAMBOO_DB_PW@$BAMBOO_DB_HOST:50000/datausa
 
 clickhouse-local:
   driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver

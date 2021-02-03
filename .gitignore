@@ -9,3 +9,8 @@ dist/
 *.sqlite
 data_cache.sql
 *.pyc
+venv/
+.env
+*.ipynb
+*.tab
+*.python-version
