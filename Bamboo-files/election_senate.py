@@ -6,6 +6,9 @@ import numpy as np
 import string
 import nlp_method as nm
 import csv
+
+from utils import NAMES_MAP
+
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -36,7 +39,8 @@ class ManualFixStep(PipelineStep):
         conds_humphrey = (senate_df.geo_id == '04000US27') & (senate_df.year == 1976) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 1290736)
         assert len(senate_df[conds_humphrey]) == 1
         senate_df.loc[conds_humphrey, 'candidate'] = 'Hubert H. Humphrey'
-        senate_df.loc[conds_humphrey, 'candidate_id'] = 'S8MNXX999' # This is a made-up code, Hubert Humphrey doesn't appear in the FEC API Search.
+        senate_df.loc[conds_humphrey, 'candidate_other'] = 'Hubert H. Humphrey'
+        senate_df.loc[conds_humphrey, 'candidate_id'] = 'S9MNXXX76' # This is a made-up code, Hubert Humphrey doesn't appear in the FEC API Search.
 
         # Fix for Rick Scott, FL 2018
         conds_scott = (senate_df.geo_id == '04000US12') & (senate_df.year == 2018) & (senate_df.candidate_id == 'S8FL00273') & (senate_df.candidatevotes == 4099505)
@@ -44,10 +48,129 @@ class ManualFixStep(PipelineStep):
         senate_df.loc[conds_scott, 'candidate'] = 'Rick Scott'
         senate_df.loc[conds_scott, 'candidate_other'] = 'Rick Scott'
 
+        # Fix for Tim Wirth, CO 1986
+        conds_wirth = (senate_df.geo_id == '04000US08') & (senate_df.year == 1986) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 529449)
+        assert len(senate_df[conds_wirth]) == 1
+        senate_df.loc[conds_wirth, 'candidate'] = 'Tim Wirth'
+        senate_df.loc[conds_wirth, 'candidate_other'] = 'Tim Wirth'
+        senate_df.loc[conds_wirth, 'candidate_id'] = 'S6CO00051'
+        
+        # Fix for William Roth, DE 1976
+        conds_roth = (senate_df.geo_id == '04000US10') & (senate_df.year == 1976) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 125454)
+        assert len(senate_df[conds_roth]) == 1
+        senate_df.loc[conds_roth, 'candidate'] = 'William Roth'
+        senate_df.loc[conds_roth, 'candidate_other'] = 'William Roth'
+        senate_df.loc[conds_roth, 'candidate_id'] = 'S6DE00016'
+
+        # Fix for Wyche Fowler, GA 1992
+        conds_fowler = (senate_df.geo_id == '04000US13') & (senate_df.year == 1992) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 618877)
+        assert len(senate_df[conds_fowler]) == 1
+        senate_df.loc[conds_fowler, 'candidate'] = 'Wyche Fowler Jr.'
+        senate_df.loc[conds_fowler, 'candidate_other'] = 'Wyche Fowler Jr.'
+        senate_df.loc[conds_fowler, 'candidate_id'] = 'S6GA00051'
+
+        # Fix for Charles H. Percy, IL 1978
+        conds_percy = (senate_df.geo_id == '04000US17') & (senate_df.year == 1978) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 1698711)
+        assert len(senate_df[conds_percy]) == 1
+        senate_df.loc[conds_percy, 'candidate'] = 'Charles H Percy'
+        senate_df.loc[conds_percy, 'candidate_other'] = 'Charles H Percy'
+        senate_df.loc[conds_percy, 'candidate_id'] = 'S6IL00037'
+
+        # Fix for Harry F. Byrd Jr., VA 1976
+        conds_byrd = (senate_df.geo_id == '04000US51') & (senate_df.year == 1976) & (senate_df.candidate_id == 'S99999999') & (senate_df.candidatevotes == 890778)
+        assert len(senate_df[conds_byrd]) == 1
+        senate_df.loc[conds_byrd, 'candidate'] = 'Harry F. Byrd Jr.'
+        senate_df.loc[conds_byrd, 'candidate_other'] = 'Harry F. Byrd Jr.'
+        senate_df.loc[conds_byrd, 'candidate_id'] = 'S9VAXXX76' # This is a made-up code, Harry Byrd doesn't appear in the FEC API Search.
+
+        # Fix for Roger Wicker, MN
+        conds_wicker = (senate_df.geo_id == '04000US28') & (senate_df.candidate_id == 'S8MS00196')
+        assert len(senate_df[conds_wicker]) == 3
+        senate_df.loc[conds_wicker, 'candidate'] = 'Roger Wicker'
+        senate_df.loc[conds_wicker, 'candidate_other'] = 'Roger Wicker'
+
+        # Fix for Thom Tillis, NC
+        conds_tillis = (senate_df.geo_id == '04000US37') & (senate_df.candidate_id == 'S4NC00162')
+        assert len(senate_df[conds_tillis]) == 1
+        senate_df.loc[conds_tillis, 'candidate'] = 'Thom Tillis'
+        senate_df.loc[conds_tillis, 'candidate_other'] = 'Thom Tillis'
+
+        # Fix for Jesse Helms, NC
+        conds_helms = (senate_df.geo_id == '04000US37') & (senate_df.candidate_id == 'S8NC00015')
+        assert len(senate_df[conds_helms]) == 4
+        senate_df.loc[conds_helms, 'candidate'] = 'Jesse Helms'
+        senate_df.loc[conds_helms, 'candidate_other'] = 'Jesse Helms'
+
+        # Fix for Rob Portman, OH
+        conds_portman = (senate_df.geo_id == '04000US39') & (senate_df.candidate_id == 'S0OH00133')
+        assert len(senate_df[conds_portman]) == 2
+        senate_df.loc[conds_portman, 'candidate'] = 'Rob Portman'
+        senate_df.loc[conds_portman, 'candidate_other'] = 'Rob Portman'
+
+        # Fix for Jim Inhofe, OK
+        conds_inhofe = (senate_df.geo_id == '04000US40') & (senate_df.candidate_id == 'S4OK00083')
+        assert len(senate_df[conds_inhofe]) == 5
+        senate_df.loc[conds_inhofe, 'candidate'] = 'Jim Inhofe'
+        senate_df.loc[conds_inhofe, 'candidate_other'] = 'Jim Inhofe'
+
+        # Fix for John Cornyn, TX
+        conds_cornyn = (senate_df.geo_id == '04000US48') & (senate_df.candidate_id == 'S2TX00106')
+        assert len(senate_df[conds_cornyn]) == 3
+        senate_df.loc[conds_cornyn, 'candidate'] = 'John Cornyn'
+        senate_df.loc[conds_cornyn, 'candidate_other'] = 'John Cornyn'
+
+        # Fix for Ted Cruz, TX
+        conds_cruz = (senate_df.geo_id == '04000US48') & (senate_df.candidate_id == 'S2TX00312')
+        assert len(senate_df[conds_cruz]) == 2
+        senate_df.loc[conds_cruz, 'candidate'] = 'Ted Cruz'
+        senate_df.loc[conds_cruz, 'candidate_other'] = 'Ted Cruz'
+
+        # Fix for Mitt Romney, UT
+        conds_romney = (senate_df.geo_id == '04000US49') & (senate_df.candidate_id == 'S8UT00176')
+        assert len(senate_df[conds_romney]) == 1
+        senate_df.loc[conds_romney, 'candidate'] = 'Mitt Romney'
+        senate_df.loc[conds_romney, 'candidate_other'] = 'Mitt Romney'
+
+        # Fix for Bernie Sanders, VT
+        conds_sanders = (senate_df.geo_id == '04000US50') & (senate_df.candidate_id == 'S4VT00033')
+        assert len(senate_df[conds_sanders]) == 3
+        senate_df.loc[conds_sanders, 'candidate'] = 'Bernie Sanders'
+        senate_df.loc[conds_sanders, 'candidate_other'] = 'Bernie Sanders'
+
+        # Fix for Tim Kaine, VA
+        conds_kaine = (senate_df.geo_id == '04000US51') & (senate_df.candidate_id == 'S2VA00142')
+        assert len(senate_df[conds_kaine]) == 2
+        senate_df.loc[conds_kaine, 'candidate'] = 'Tim Kaine'
+        senate_df.loc[conds_kaine, 'candidate_other'] = 'Tim Kaine'
+
+        # Duplicate candidate_id for Kit Bond
+        conds_bond = (senate_df.candidate == 'Christopher S Bond') | (senate_df.candidate == 'Christopher (Kit) Bond')
+        senate_df.loc[conds_bond, 'candidate'] = 'Kit Bond'
+        senate_df.loc[conds_bond, 'candidate_other'] = 'Kit Bond'
+
+        # Duplicate candidate_id for David Durenberger
+        senate_df.loc[senate_df.candidate == 'Dave Durenberger', 'candidate'] = 'David Durenberger'
+        senate_df.loc[senate_df.candidate == 'Dave Durenberger', 'candidate_other'] = 'David Durenberger'
+
         # Adding extra rows
-        df_extra = pd.read_csv("resources/senate_extra_rows.csv")
+        df_extra = pd.read_csv('resources/senate_extra_rows.csv')
         senate_df = pd.concat([senate_df, df_extra])
-        #senate_df.to_csv("senate_df.csv", index=False, quoting=csv.QUOTE_NONNUMERIC)
+
+        # Fixing names different than "Other" for candidate_id "S99999999"
+        other_conds = senate_df['candidate'].isin(NAMES_MAP.keys())
+        senate_df.loc[other_conds, 'candidate_id'] = senate_df.loc[other_conds, 'candidate']
+        senate_df.loc[other_conds, 'candidate_id'] = senate_df.loc[other_conds, 'candidate_id'].replace(NAMES_MAP)
+
+        # Checking for unique names assigned to candidate IDs
+        candidates_df = senate_df.copy()
+        candidates_df = candidates_df[['candidate_id', 'candidate']]
+        candidates_df = candidates_df.drop_duplicates().sort_values(by='candidate_id').reset_index(drop=True)
+
+        candidates_df2 = candidates_df[candidates_df.duplicated(subset='candidate_id', keep=False)]
+
+        assert len(candidates_df2) == 0
+        
+        # Return senate_df
         return senate_df
 
 
@@ -151,6 +274,7 @@ class ElectionSenatePipeline(EasyPipeline):
         return [
             Parameter("year", dtype=int),
             Parameter("force", dtype=bool),
+            Parameter("ingest", dtype=bool),
             Parameter(label="Output database connector", name="output-db", dtype=str, source=Connector)
         ]
 
@@ -178,4 +302,8 @@ class ElectionSenatePipeline(EasyPipeline):
                 "candidate_other": "varchar(255)"
         }
         load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
-        return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
+
+        if params.get("ingest"):
+            return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
+        else:
+            return [dl_step, fec_step, xform_step, manual_fix_step]
