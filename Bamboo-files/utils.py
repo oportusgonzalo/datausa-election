@@ -81,3 +81,26 @@ def electoralcollege(democrat_df, republican_df, year):
     cols = ['year', 'geoid', 'party', 'electoralvote']  # arranging the order of columns
     df = df[cols]
     return df
+
+
+NAMES_MAP = {
+    'Kit Bond': 'S6MO00289',
+    'Jerry Brekke': 'S6MNXXX76',
+    'John Grady': 'S6FLXXX76',
+    'Dean Barkley': 'S4MNXXX96',
+    'David Durenberger': 'S8MN00131',
+    'Alex Smith': 'S6ILXXX78',
+    'Dwight Jensen': 'S6IDXXX78',
+    'Jim Sykes': 'S2AKXXX02',
+    'Tom Kelly': 'S8ARXXX78',
+    'John Graham Black': 'S8ARXX078',
+    'Donald Stewart': 'S8AL00043',
+    'Gale Mcgee': 'S6WYXXX76',
+    'Stanley York': 'S2WIXXX76',
+    'Blank Vote': 'S99999998',
+    'Alan Steelman': 'S6TXXXX76',
+    'Robert Stroup': 'S6NDXXX76',
+    'David Towell': 'S6NVXXX76',
+    'William Quinn': 'S6HIXXX76',
+    'Gloria Schaffer': 'S6CTXXX76'
+}
