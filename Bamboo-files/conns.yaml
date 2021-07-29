@@ -14,6 +14,10 @@ clickhouse-remote:
   driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver
   uri: clickhouse://tesseract-alpaca.datausa.io:9000/datausa
 
+clickhouse-database:
+  driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver
+  uri: clickhouse://$CLICKHOUSE_USERNAME:$CLICKHOUSE_PASSWORD@$CLICKHOUSE_URL/$CLICKHOUSE_DATABASE
+
 http-local:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
   uri: http://data.bls.gov/cew/data/api/2015/1/area/US000.csv
