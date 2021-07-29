@@ -8,6 +8,8 @@ from fuzzywuzzy import process, fuzz
 from bamboo_lib.logger import logger
 from bamboo_lib import helpers
 
+nltk.download('punkt')
+
 
 # Modification method
 # bool value is true when we want reverse the string that is wehn the candidate name is not from presidential data
