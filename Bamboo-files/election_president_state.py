@@ -43,10 +43,13 @@ class TransformStep(PipelineStep):
         president.loc[(president.candidate.isin(unavailable_name_list)), 'party'] = "Unavailable"
         president.loc[(president.candidate.isin(unavailable_name_list)), 'candidate'] = "Blank Vote"
         # improved capitalization
+        president = president.rename(columns={"party": "party_ex", "party_detailed": "party"})
+        president.loc[president["party"].isnull(), "party"] = "Other"
         president['party'] = president['party'].apply(lambda x: string.capwords(x))
         president.loc[(president['party'] == "Democrat"), 'party'] = "Democratic"
         president.drop(["notes", "state_cen", "state_ic", "state_po", "writein"], axis=1, inplace=True)
         president.rename(columns={'state': 'geo_name', 'state_fips': 'geo_id'}, inplace=True)
+        president['geo_name'] = president['geo_name'].apply(lambda x: string.capwords(x))
 
         # importing the FEC data
         president_candidate1 = president_candidate.loc[:, ['name', 'party_full', 'election_years', 'candidate_id']]
@@ -139,8 +142,7 @@ class EelectionPresidentStatePipeline(EasyPipeline):
         return [
             Parameter("year", dtype=int),
             Parameter("force", dtype=bool),
-            Parameter(label="Output database connector", name="output-db", dtype=str, source=Connector),
-            Parameter("folder", dtype=str)
+            Parameter(label="Output database connector", name="output-db", dtype=str, source=Connector)
         ]
 
     @staticmethod
@@ -149,5 +151,5 @@ class EelectionPresidentStatePipeline(EasyPipeline):
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
-        load_step = LoadStep("election_president", dtype={"geo_id": "varchar(255)", "party": "varchar(255)", "candidate_id": "varchar(255)"}, connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version", schema="election")
+        load_step = LoadStep("election_president_new", dtype={"geo_id": "varchar(255)", "party": "varchar(255)", "candidate_id": "varchar(255)"}, connector=params["output-db"], connector_path=__file__, if_exists="drop", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version", schema="election")
         return [dl_step, fec_step, xform_step, load_step]

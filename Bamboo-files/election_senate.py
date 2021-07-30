@@ -91,7 +91,7 @@ class ManualFixStep(PipelineStep):
 
         # Fix for Thom Tillis, NC
         conds_tillis = (senate_df.geo_id == '04000US37') & (senate_df.candidate_id == 'S4NC00162')
-        assert len(senate_df[conds_tillis]) == 1
+        assert len(senate_df[conds_tillis]) == 2
         senate_df.loc[conds_tillis, 'candidate'] = 'Thom Tillis'
         senate_df.loc[conds_tillis, 'candidate_other'] = 'Thom Tillis'
 
@@ -109,13 +109,13 @@ class ManualFixStep(PipelineStep):
 
         # Fix for Jim Inhofe, OK
         conds_inhofe = (senate_df.geo_id == '04000US40') & (senate_df.candidate_id == 'S4OK00083')
-        assert len(senate_df[conds_inhofe]) == 5
+        assert len(senate_df[conds_inhofe]) == 6
         senate_df.loc[conds_inhofe, 'candidate'] = 'Jim Inhofe'
         senate_df.loc[conds_inhofe, 'candidate_other'] = 'Jim Inhofe'
 
         # Fix for John Cornyn, TX
         conds_cornyn = (senate_df.geo_id == '04000US48') & (senate_df.candidate_id == 'S2TX00106')
-        assert len(senate_df[conds_cornyn]) == 3
+        assert len(senate_df[conds_cornyn]) == 4
         senate_df.loc[conds_cornyn, 'candidate'] = 'John Cornyn'
         senate_df.loc[conds_cornyn, 'candidate_other'] = 'John Cornyn'
 
@@ -153,13 +153,14 @@ class ManualFixStep(PipelineStep):
         senate_df.loc[senate_df.candidate == 'Dave Durenberger', 'candidate_other'] = 'David Durenberger'
 
         # Adding extra rows
-        df_extra = pd.read_csv('resources/senate_extra_rows.csv')
+        df_extra = pd.read_csv('Bamboo-files/resources/senate_extra_rows.csv')
         senate_df = pd.concat([senate_df, df_extra])
 
         # Fixing names different than "Other" for candidate_id "S99999999"
         other_conds = senate_df['candidate'].isin(NAMES_MAP.keys())
         senate_df.loc[other_conds, 'candidate_id'] = senate_df.loc[other_conds, 'candidate']
         senate_df.loc[other_conds, 'candidate_id'] = senate_df.loc[other_conds, 'candidate_id'].replace(NAMES_MAP)
+        senate_df.loc[senate_df["candidate_id"] == "S99999999", "candidate"] = "Other"
 
         # Checking for unique names assigned to candidate IDs
         candidates_df = senate_df.copy()
@@ -169,6 +170,8 @@ class ManualFixStep(PipelineStep):
         candidates_df2 = candidates_df[candidates_df.duplicated(subset='candidate_id', keep=False)]
 
         assert len(candidates_df2) == 0
+
+        senate_df = senate_df.drop("party_simplified", axis=1)
         
         # Return senate_df
         return senate_df
@@ -193,6 +196,7 @@ class TransformStep(PipelineStep):
         senate['state_fips'] = "04000US" + senate.state_fips.astype(str).str.zfill(2)
         senate["office"] = "Senate"
         senate.loc[(senate['candidate'].isnull()), 'candidate'] = 'Other'
+        senate = senate.rename(columns={"party_detailed": "party"})
         senate.loc[(senate['party'].isnull()), 'party'] = 'Other'
         senate['party'] = senate['party'].apply(lambda x: string.capwords(x))
         senate.loc[(senate['party'] == "Democrat"), 'party'] = "Democratic"
@@ -265,6 +269,7 @@ class TransformStep(PipelineStep):
         # final transformation steps
         senate.loc[(senate['candidate_id'] == "S99999999"), 'candidate_other'] = "Other"
         senate.drop(["state_cen", "state_ic", "mode", "state_po", "district", "writein"], axis=1, inplace=True)
+        senate['geo_name'] = senate['geo_name'].apply(lambda x: string.capwords(x))
         return senate
 
 
@@ -301,7 +306,7 @@ class ElectionSenatePipeline(EasyPipeline):
                 "candidate_id": "varchar(255)",
                 "candidate_other": "varchar(255)"
         }
-        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
+        load_step = LoadStep("election_senate_new", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
 
         if params.get("ingest"):
             return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
