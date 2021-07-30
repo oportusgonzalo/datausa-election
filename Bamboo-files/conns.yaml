@@ -24,15 +24,15 @@ http-local:
 
 usp-data:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
-  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/42MVDX/MFU99O
+  uri: https://dataverse.harvard.edu/api/access/datafile/4299753?format=tab&gbrecs=true
 
 ussenate-data:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
-  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/PEJ5QU/XXQCIK
+  uri: https://dataverse.harvard.edu/api/access/datafile/4300300?format=tab&gbrecs=true
 
 ush-data:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
-  uri: https://dataverse.harvard.edu/api/access/datafile/:persistentId?persistentId=doi:10.7910/DVN/IG0UN2/8KAB8V
+  uri: https://dataverse.harvard.edu/api/access/datafile/4778141?format=tab&gbrecs=true
 
 uspc-data:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver
