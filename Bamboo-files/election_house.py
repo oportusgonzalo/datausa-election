@@ -101,6 +101,11 @@ class TransformStep(PipelineStep):
         house['special'] = house['special'].astype(np.int64)
         house['runoff'] = house['runoff'].astype(np.int64)
         house['unofficial'] = house['unofficial'].astype(np.int64)
+        house['year'] = house['year'].astype(int)
+        house['geo_name'] = house['geo_name'].apply(lambda x: string.capwords(x))
+
+        house["fusion_ticket"] = house["fusion_ticket"].astype(str)
+
         return house
 
 
@@ -115,9 +120,29 @@ class ElectionHousePipeline(EasyPipeline):
 
     @staticmethod
     def steps(params):
+
+        dtype = {
+            "year": "INTEGER",
+            "geo_name": "varchar(255)",
+            "office": "varchar(255)",
+            "geo_id": "varchar(255)",
+            "stage": "varchar(255)",
+            "runoff": "INTEGER",
+            "special": "INTEGER",
+            "candidate": "varchar(255)",
+            "party": "varchar(255)",
+            "candidatevotes": "INTEGER",
+            "totalvotes": "INTEGER",
+            "unofficial": "INTEGER",
+            "version": "INTEGER",
+            "fusion_ticket": "varchar(255)",
+            "candidate_id": "varchar(255)",
+            "candidate_other": "varchar(255)"
+        }
+
         sys.path.append(os.getcwd())
         dl_step = DownloadStep(connector="ush-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.HOUSE)
         xform_step = TransformStep()
-        load_step = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", schema="election")
+        load_step = LoadStep("election_house_new", connector=params["output-db"], connector_path=__file__, dtype=dtype, if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", schema="election")
         return [dl_step, fec_step, xform_step, load_step]
