@@ -104,7 +104,7 @@ class TransformStep(PipelineStep):
         house['year'] = house['year'].astype(int)
         house['geo_name'] = house['geo_name'].apply(lambda x: string.capwords(x))
 
-        house["fusion_ticket"] = house["fusion_ticket"].astype(str)
+        house = house.drop("fusion_ticket", axis=1)
 
         return house
 
@@ -135,7 +135,6 @@ class ElectionHousePipeline(EasyPipeline):
             "totalvotes": "INTEGER",
             "unofficial": "INTEGER",
             "version": "INTEGER",
-            "fusion_ticket": "varchar(255)",
             "candidate_id": "varchar(255)",
             "candidate_other": "varchar(255)"
         }
