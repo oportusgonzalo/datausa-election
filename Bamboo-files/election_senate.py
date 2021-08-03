@@ -306,7 +306,7 @@ class ElectionSenatePipeline(EasyPipeline):
                 "candidate_id": "varchar(255)",
                 "candidate_other": "varchar(255)"
         }
-        load_step = LoadStep("election_senate_new", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
+        load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
 
         if params.get("ingest"):
             return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
