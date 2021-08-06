@@ -1,6 +1,6 @@
 postgres-local:
   driver: bamboo_lib.connectors.drivers.postgres.PostgresDriver
-  uri: postgres://$BAMBOO_DB_USER:$BAMBOO_DB_PW@$BAMBOO_DB_HOST/$BAMBOO_DB_NAME
+  uri: postgres://$DATAUSA_DB_USER:$DATAUSA_DB_PW@$DATAUSA_DB_HOST/$DATAUSA_DB_NAME
 
 monet-backend:
   driver: bamboo_lib.connectors.drivers.monet.MonetDriver
