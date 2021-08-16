@@ -125,6 +125,8 @@ class TransformStep(PipelineStep):
         if params["output-db"] == "clickhouse-database":
             house_compact['version'] = datetime.now()
             house_compact['version'] = pd.to_datetime(house_compact['version'], infer_datetime_format=True)
+        
+        house_compact = house_compact[house_compact["winner_votes"] >= 0]
 
         return house_compact
 
