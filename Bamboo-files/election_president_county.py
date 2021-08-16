@@ -222,24 +222,46 @@ class ElectionPipeline(EasyPipeline):
 
     @staticmethod
     def steps(params):
+
+        dtype_click = {
+            "year": "UInt16",
+            "geo_name": "String",
+            "geo_id": "String",
+            "office": "String",
+            "candidate": "String",
+            "party": "String",
+            "candidatevotes": "UInt32",
+            "totalvotes": "UInt32",
+            "version": "DateTime",
+            "candidate_id": "String"
+        }
+
         sys.path.append(os.getcwd())
         dl_step = DownloadStep(
             connector="uspc-data", connector_path=__file__,
             force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
+
         load_step = LoadStep(
             "election_president", connector=params["output-db"],
             connector_path=__file__, if_exists="append",
             pk=['year', 'candidate_id', 'party'],
             engine="ReplacingMergeTree", engine_params="version", schema="election")
+
+        load_step_click = LoadStep(
+            "election_president", connector=params["output-db"],
+            connector_path=__file__, if_exists="append", dtype=dtype_click,
+            pk=['year', 'candidate_id', 'party'],
+            engine="ReplacingMergeTree", engine_params="version")
+        
         ak_house_step = AlaskaHouseStep()
         ak_house_load_step = LoadStep(
             "alaska_housedist", connector=params["output-db"],
             connector_path=__file__, if_exists="append",
             pk=['geo_id', 'geo_name'])
         if params.get("alaska-table", False):
-            return [dl_step, fec_step, xform_step, load_step, ak_house_step,
-                    ak_house_load_step]
+            return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click, 
+                ak_house_step, ak_house_load_step]
         else:
-            return [dl_step, fec_step, xform_step, load_step]
+            return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
