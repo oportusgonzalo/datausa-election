@@ -290,6 +290,7 @@ class ElectionSenatePipeline(EasyPipeline):
         fec_step = ExtractFECStep(ExtractFECStep.SENATE)
         xform_step = TransformStep()
         manual_fix_step = ManualFixStep()
+        
         dtype = {
             	"year": "smallint",
                 "geo_name": "varchar(255)",
@@ -306,9 +307,28 @@ class ElectionSenatePipeline(EasyPipeline):
                 "candidate_id": "varchar(255)",
                 "candidate_other": "varchar(255)"
         }
+
+        dtype_click = {
+            	"year": "UInt16",
+                "geo_name": "String",
+                "geo_id": "String",
+                "office": "String",
+                "stage": "String",
+                "special": "UInt8",
+                "candidate": "String",
+                "party": "String",
+                "candidatevotes": "UInt32",
+                "totalvotes": "UInt32",
+                "unofficial": "UInt8",
+                "version": "DateTime",
+                "candidate_id": "String",
+                "candidate_other": "String"
+        }
+
         load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
+        load_step_click = LoadStep("election_senate", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype_click)
 
         if params.get("ingest"):
-            return [dl_step, fec_step, xform_step, manual_fix_step, load_step]
+            return [dl_step, fec_step, xform_step, manual_fix_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
         else:
             return [dl_step, fec_step, xform_step, manual_fix_step]
