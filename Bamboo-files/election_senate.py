@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import string
 import nlp_method as nm
-import csv
+from datetime import datetime
 
 from utils import NAMES_MAP
 
@@ -172,6 +172,10 @@ class ManualFixStep(PipelineStep):
         assert len(candidates_df2) == 0
 
         senate_df = senate_df.drop("party_simplified", axis=1)
+
+        if params["output-db"] == "clickhouse-database":
+            senate_df['version'] = datetime.now()
+            senate_df['version'] = pd.to_datetime(senate_df['version'], infer_datetime_format=True)
         
         # Return senate_df
         return senate_df
@@ -326,7 +330,7 @@ class ElectionSenatePipeline(EasyPipeline):
         }
 
         load_step = LoadStep("election_senate", schema="election", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype)
-        load_step_click = LoadStep("election_senate", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", dtype=dtype_click)
+        load_step_click = LoadStep("election_senate", connector=params["output-db"], connector_path=__file__, if_exists="append", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", dtype=dtype_click)
 
         if params.get("ingest"):
             return [dl_step, fec_step, xform_step, manual_fix_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]

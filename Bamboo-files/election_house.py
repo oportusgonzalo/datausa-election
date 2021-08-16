@@ -5,6 +5,7 @@ import pandas as pd
 import nlp_method as nm
 import numpy as np
 import string
+from datetime import datetime
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -106,6 +107,10 @@ class TransformStep(PipelineStep):
 
         house = house.drop("fusion_ticket", axis=1)
 
+        if params["output-db"] == "clickhouse-database":
+            house['version'] = datetime.now()
+            house['version'] = pd.to_datetime(house['version'], infer_datetime_format=True)
+
         return house
 
 
@@ -166,6 +171,6 @@ class ElectionHousePipeline(EasyPipeline):
             if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", schema="election")
 
         load_step_click = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, dtype=dtype_click, 
-            if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+            if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree")
 
         return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]

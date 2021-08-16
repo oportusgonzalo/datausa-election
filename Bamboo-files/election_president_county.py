@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import os
 import string
+from datetime import datetime
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -196,6 +197,10 @@ class TransformStep(PipelineStep):
             np.int64)
         president['totalvotes'] = president['totalvotes'].astype(np.int64)
 
+        if params["output-db"] == "clickhouse-database":
+            president['version'] = datetime.now()
+            president['version'] = pd.to_datetime(president['version'], infer_datetime_format=True)
+
         return president
 
 
@@ -253,7 +258,7 @@ class ElectionPipeline(EasyPipeline):
             "election_president", connector=params["output-db"],
             connector_path=__file__, if_exists="append", dtype=dtype_click,
             pk=['year', 'candidate_id', 'party'],
-            engine="ReplacingMergeTree", engine_params="version")
+            engine="ReplacingMergeTree")
         
         ak_house_step = AlaskaHouseStep()
         ak_house_load_step = LoadStep(

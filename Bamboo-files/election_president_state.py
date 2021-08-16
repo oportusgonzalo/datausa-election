@@ -3,6 +3,7 @@ import collections
 import os
 import sys
 import string
+from datetime import datetime
 import nlp_method as nm
 from shared_steps import ExtractFECStep
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
@@ -136,6 +137,10 @@ class TransformStep(PipelineStep):
         
         df = pd.concat([president_state, president_nation])
 
+        if params["output-db"] == "clickhouse-database":
+            df['version'] = datetime.now()
+            df['version'] = pd.to_datetime(df['version'], infer_datetime_format=True)
+
         return df
 
 
@@ -170,6 +175,6 @@ class EelectionPresidentStatePipeline(EasyPipeline):
         xform_step = TransformStep()
         
         load_step = LoadStep("election_president", dtype={"geo_id": "varchar(255)", "party": "varchar(255)", "candidate_id": "varchar(255)"}, connector=params["output-db"], connector_path=__file__, if_exists="drop", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version", schema="election")
-        load_step_click = LoadStep("election_president", dtype=dtype_click, connector=params["output-db"], connector_path=__file__, if_exists="drop", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version")
+        load_step_click = LoadStep("election_president", dtype=dtype_click, connector=params["output-db"], connector_path=__file__, if_exists="drop", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree")
 
         return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
