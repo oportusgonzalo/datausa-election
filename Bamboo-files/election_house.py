@@ -110,6 +110,8 @@ class TransformStep(PipelineStep):
         if params["output-db"] == "clickhouse-database":
             house['version'] = datetime.now()
             house['version'] = pd.to_datetime(house['version'], infer_datetime_format=True)
+        
+        house = house[house["candidatevotes"] >= 0]
 
         return house
 
