@@ -133,7 +133,10 @@ class TransformStep(PipelineStep):
         }).reset_index()
         compressed_votes.rename(columns={"candidatevotes": "totalvotes"}, inplace=True)
         president_nation = president_nation.merge(compressed_votes, on=["year"], how="left")
-        return pd.concat([president_state, president_nation])
+        
+        df = pd.concat([president_state, president_nation])
+
+        return df
 
 
 class EelectionPresidentStatePipeline(EasyPipeline):
@@ -147,9 +150,26 @@ class EelectionPresidentStatePipeline(EasyPipeline):
 
     @staticmethod
     def steps(params):
+
+        dtype_click = {
+            "year": "UInt16",
+            "geo_name": "String",
+            "geo_id": "String",
+            "office": "String",
+            "candidate": "String",
+            "party": "String",
+            "candidatevotes": "UInt32",
+            "totalvotes": "UInt32",
+            "version": "DateTime",
+            "candidate_id": "String"
+        }
+
         sys.path.append(os.getcwd())
         dl_step = DownloadStep(connector="usp-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.PRESIDENT)
         xform_step = TransformStep()
+        
         load_step = LoadStep("election_president", dtype={"geo_id": "varchar(255)", "party": "varchar(255)", "candidate_id": "varchar(255)"}, connector=params["output-db"], connector_path=__file__, if_exists="drop", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version", schema="election")
-        return [dl_step, fec_step, xform_step, load_step]
+        load_step_click = LoadStep("election_president", dtype=dtype_click, connector=params["output-db"], connector_path=__file__, if_exists="drop", pk=['year', 'candidate_id', 'party', 'geo_id'], engine="ReplacingMergeTree", engine_params="version")
+
+        return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
