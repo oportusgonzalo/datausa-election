@@ -164,6 +164,7 @@ class ElectionHousePipeline(EasyPipeline):
             "winning_candidate": "String",
             "special": "UInt8",
             "party": "String",
+            "version": "DateTime",
             "runoff": "UInt8"
         }
 
