@@ -5,6 +5,7 @@ import pandas as pd
 import nlp_method as nm
 import numpy as np
 import string
+from datetime import datetime
 from bamboo_lib.models import Parameter, EasyPipeline, PipelineStep
 from bamboo_lib.steps import DownloadStep, LoadStep
 from bamboo_lib.connectors.models import Connector
@@ -121,6 +122,10 @@ class TransformStep(PipelineStep):
         house_compact = house_compact.sort_values(["year", "district"])
         house_compact.reset_index(drop=True, inplace=True)
 
+        if params["output-db"] == "clickhouse-database":
+            house_compact['version'] = datetime.now()
+            house_compact['version'] = pd.to_datetime(house_compact['version'], infer_datetime_format=True)
+
         return house_compact
 
 
@@ -165,5 +170,5 @@ class ElectionHousePipeline(EasyPipeline):
         fec_step = ExtractFECStep(ExtractFECStep.HOUSE)
         xform_step = TransformStep()
         load_step = LoadStep("election_house_compact", connector=params["output-db"], connector_path=__file__, dtype=dtype, if_exists="drop", pk=['year', 'district'], engine="ReplacingMergeTree", engine_params="version", schema="election")
-        load_step_click = LoadStep("election_house_compact", connector=params["output-db"], connector_path=__file__, dtype=dtype_click, if_exists="drop", pk=['year', 'district'], engine="ReplacingMergeTree", engine_params="version")
+        load_step_click = LoadStep("election_house_compact", connector=params["output-db"], connector_path=__file__, dtype=dtype_click, if_exists="drop", pk=['year', 'district'], engine="ReplacingMergeTree")
         return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
