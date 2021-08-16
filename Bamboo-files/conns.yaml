@@ -10,9 +10,9 @@ clickhouse-local:
   driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver
   uri: clickhouse://127.0.0.1/election_db
 
-clickhouse-remote:
+clickhouse-database:
   driver: bamboo_lib.connectors.drivers.clickhouse.ClickhouseDriver
-  uri: clickhouse://tesseract-alpaca.datausa.io:9000/datausa
+  uri: clickhouse://$CLICKHOUSE_USERNAME:$CLICKHOUSE_PASSWORD@$CLICKHOUSE_URL/$CLICKHOUSE_DATABASE
 
 http-local:
   driver: bamboo_lib.connectors.drivers.http.HttpDriver

@@ -139,9 +139,33 @@ class ElectionHousePipeline(EasyPipeline):
             "candidate_other": "varchar(255)"
         }
 
+        dtype_click = {
+            "year": "UInt16",
+            "geo_name": "String",
+            "office": "String",
+            "geo_id": "String",
+            "stage": "String",
+            "runoff": "UInt8",
+            "special": "UInt8",
+            "candidate": "String",
+            "party": "String",
+            "candidatevotes": "UInt32",
+            "totalvotes": "UInt32",
+            "unofficial": "UInt8",
+            "version": "DateTime",
+            "candidate_id": "String",
+            "candidate_other": "String"
+        }
+
         sys.path.append(os.getcwd())
         dl_step = DownloadStep(connector="ush-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.HOUSE)
         xform_step = TransformStep()
-        load_step = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, dtype=dtype, if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", schema="election")
-        return [dl_step, fec_step, xform_step, load_step]
+
+        load_step = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, dtype=dtype, 
+            if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version", schema="election")
+
+        load_step_click = LoadStep("election_house", connector=params["output-db"], connector_path=__file__, dtype=dtype_click, 
+            if_exists="drop", pk=['year', 'candidate_id', 'party'], engine="ReplacingMergeTree", engine_params="version")
+
+        return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
