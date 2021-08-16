@@ -121,7 +121,7 @@ class TransformStep(PipelineStep):
         house_compact = house_compact.sort_values(["year", "district"])
         house_compact.reset_index(drop=True, inplace=True)
 
-        return house_compact
+        return house_compact, print(house_compact), print(house_compact.info()), print(house_compact.describe().T)
 
 
 class ElectionHousePipeline(EasyPipeline):
@@ -148,9 +148,22 @@ class ElectionHousePipeline(EasyPipeline):
             "runoff": "INTEGER"
         }
 
+        dtype_click = {
+            "year": "UInt16",
+            "district": "String",
+            "winner_votes": "UInt32",
+            "other_votes": "UInt32",
+            "total_votes": "UInt32",
+            "winning_candidate": "String",
+            "special": "UInt8",
+            "party": "String",
+            "runoff": "UInt8"
+        }
+
         sys.path.append(os.getcwd())
         dl_step = DownloadStep(connector="ush-data", connector_path=__file__, force=params.get("force", False))
         fec_step = ExtractFECStep(ExtractFECStep.HOUSE)
         xform_step = TransformStep()
         load_step = LoadStep("election_house_compact", connector=params["output-db"], connector_path=__file__, dtype=dtype, if_exists="drop", pk=['year', 'district'], engine="ReplacingMergeTree", engine_params="version", schema="election")
-        return [dl_step, fec_step, xform_step, load_step]
+        load_step_click = LoadStep("election_house_compact", connector=params["output-db"], connector_path=__file__, dtype=dtype_click, if_exists="drop", pk=['year', 'district'], engine="ReplacingMergeTree", engine_params="version")
+        return [dl_step, fec_step, xform_step, load_step if params["output-db"] != "clickhouse-database" else load_step_click]
