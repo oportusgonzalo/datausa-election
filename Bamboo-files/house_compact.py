@@ -121,7 +121,7 @@ class TransformStep(PipelineStep):
         house_compact = house_compact.sort_values(["year", "district"])
         house_compact.reset_index(drop=True, inplace=True)
 
-        return house_compact, print(house_compact), print(house_compact.info()), print(house_compact.describe().T)
+        return house_compact
 
 
 class ElectionHousePipeline(EasyPipeline):
